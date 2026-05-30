@@ -1,0 +1,13 @@
+rule_name: pre_rmd_delay_social_security
+title: Social Security at 70
+phase: pre_rmd
+source: "Richer Retirement slide 40"
+conditions:
+  - phase_pre_rmd
+  - before_ss
+actions:
+  - recommend_delay_ss
+priority: 14
+tradeoffs:
+  - Need other income until claiming age
+rationale: Four rules guide — claim Social Security at 70 when optimizing lifetime benefits.

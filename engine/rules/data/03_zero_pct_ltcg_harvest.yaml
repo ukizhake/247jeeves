@@ -1,0 +1,15 @@
+rule_name: zero_pct_ltcg_harvest
+title: Harvest gains in the 0% LTCG bracket
+phase: early_retirement
+source: "Richer Retirement slide 62"
+conditions:
+  - phase_early_retirement
+  - has_taxable_balance
+  - bracket_room_22_gt
+actions:
+  - recommend_0pct_ltcg_harvest
+  - recommend_asset_location_equity_taxable
+priority: 18
+tradeoffs:
+  - Resetting basis now uses bracket room you might need for Roth conversions
+rationale: Low-income years are ideal to realize long-term gains at 0% federal LTCG rates.

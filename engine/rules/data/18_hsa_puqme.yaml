@@ -1,0 +1,13 @@
+rule_name: hsa_puqme_tactical
+title: Tactical HSA PUQME distributions
+phase: golden_years
+source: "Richer Retirement Principle 7 / slides 57, 63"
+conditions:
+  - near_22_bracket
+actions:
+  - recommend_hsa_puqme
+  - recommend_tactical_roth_to_avoid_bracket
+priority: 18
+tradeoffs:
+  - Requires documented unreimbursed medical expenses
+rationale: HSA PUQME and Roth withdrawals can fund year-end spending without pushing into higher brackets or reducing PTC.

@@ -1,0 +1,16 @@
+rule_name: sepp_72t_plan
+title: 72(t) SEPP for pre-59½ income
+phase: early_retirement
+source: "Richer Retirement Ch. 12 / slides 70–71"
+conditions:
+  - phase_early_retirement
+  - age_55_to_59
+  - has_traditional_ira
+  - taxable_nearly_depleted
+  - high_traditional_ratio
+actions:
+  - recommend_72t_sepp
+priority: 12
+tradeoffs:
+  - Locked into fixed payments for 5 years or until 59½; modification triggers retroactive penalty
+rationale: When taxable assets are exhausted and no Rule of 55 access, 72(t) generates penalty-free IRA income with favorable effective rates.

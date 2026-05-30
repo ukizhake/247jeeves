@@ -1,0 +1,14 @@
+rule_name: golden_years_roth_conversion
+title: Roth conversions in the golden years
+phase: golden_years
+source: "Richer Retirement slide 42"
+conditions:
+  - phase_golden_years
+  - has_traditional_ira
+  - bracket_room_22_gt
+actions:
+  - recommend_roth_conversion
+priority: 15
+tradeoffs:
+  - Pay tax now vs expected tax on future RMDs
+rationale: Compare upfront conversion tax to taxes on projected RMDs — the Hidden Roth IRA effect from deductions.

@@ -1,0 +1,14 @@
+rule_name: roth_conversion_pushes_ltcg
+title: Watch LTCG/QDI when doing Roth conversions
+phase: early_retirement
+source: "Richer Retirement #46 (Principle 3 caveat) / Larry example"
+conditions:
+  - phase_early_retirement
+  - ltcg_tax_positive
+actions:
+  - warn_roth_conversion_pushes_ltcg_15
+priority: 16
+tradeoffs:
+  - Paying some LTCG tax may still be worth it to reduce future RMDs
+rationale: Higher ordinary income (including conversions/IRA withdrawals) can push LTCG/QDI into the 15% bracket.
+

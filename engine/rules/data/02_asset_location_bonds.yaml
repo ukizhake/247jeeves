@@ -1,0 +1,13 @@
+rule_name: asset_location_bonds_in_ira
+title: Asset location — bonds in IRA
+phase: early_retirement
+source: "Richer Retirement slides 17, 45"
+conditions:
+  - has_traditional_ira
+  - has_taxable_balance
+actions:
+  - recommend_asset_location_bonds_ira
+priority: 25
+tradeoffs:
+  - Rebalancing may trigger taxes in taxable account
+rationale: Sheltering bond interest in tax-deferred accounts reduces recurring taxable investment income.

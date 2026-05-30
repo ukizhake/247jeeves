@@ -1,0 +1,9 @@
+Account Number,Account Name,Sleeve Name,Symbol,Description,Quantity,Last Price,Last Price Change,Current Value,Today's Gain/Loss Dollar,Today's Gain/Loss Percent,Total Gain/Loss Dollar,Total Gain/Loss Percent,Percent Of Account,Cost Basis Total,Average Cost Basis,Type
+ACCT001,Individual - TOD,,FDRXX**,HELD IN MONEY MARKET,,,,$500.00,,,,,1.00%,,,Cash,
+ACCT001,Individual - TOD,,FXAIX,FIDELITY 500 INDEX FUND,100,$250.00,+$1.00,$25000.00,+$100.00,+0.40%,+$5000.00,+25.00%,99.00%,$20000.00,$200.00,Cash,
+ACCT002,Rollover IRA,,FDRXX**,HELD IN MONEY MARKET,,,,$200.00,,,,,0.20%,,,Cash,
+ACCT002,Rollover IRA,,FXAIX,FIDELITY 500 INDEX FUND,2000,$250.00,+$1.00,$500000.00,+$2000.00,+0.40%,+$100000.00,+25.00%,99.80%,$400000.00,$200.00,Cash,
+ACCT003,ROTH IRA,,FXAIX,FIDELITY 500 INDEX FUND,200,$250.00,+$1.00,$50000.00,+$200.00,+0.40%,+$10000.00,+25.00%,100.00%,$40000.00,$200.00,Cash,
+ACCT004,Self-Employed 401K,,FXAIX,FIDELITY 500 INDEX FUND,400,$250.00,+$1.00,$100000.00,+$400.00,+0.40%,+$20000.00,+25.00%,100.00%,$80000.00,$200.00,Cash,
+
+"Date downloaded Jan-01-2026 12:00 p.m ET"

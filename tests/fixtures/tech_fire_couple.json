@@ -1,0 +1,26 @@
+{
+  "name": "Retired Couple",
+  "age": 58,
+  "plan_to_age": 95,
+  "spouse_age": 62,
+  "projection_start_year": 2026,
+  "filing_status": "mfj",
+  "accounts": {
+    "traditional_ira": 1200000,
+    "roth_ira": 50000,
+    "taxable": 800000,
+    "cash": 100000
+  },
+  "income": {
+    "rental": 0,
+    "pension": 0,
+    "dividends": 15000,
+    "consulting": 0
+  },
+  "annual_spending": 120000,
+  "social_security_claim_age": 70,
+  "social_security_annual_at_claim": 47988,
+  "spouse_social_security_annual_at_claim": 0,
+  "return_rate": 0.06,
+  "inflation_rate": 0.03
+}

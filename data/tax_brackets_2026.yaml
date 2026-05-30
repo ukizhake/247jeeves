@@ -1,0 +1,57 @@
+# Federal tax — Richer Retirement / 2025-style educational model
+
+standard_deduction:
+  single: 15700
+  mfj: 31500
+
+# Age 65+ (per eligible person)
+additional_standard_deduction_65: 1600
+senior_deduction_per_person: 6000
+
+brackets:
+  single:
+    - { up_to: 11925, rate: 0.10 }
+    - { up_to: 48475, rate: 0.12 }
+    - { up_to: 103350, rate: 0.22 }
+    - { up_to: 197300, rate: 0.24 }
+    - { up_to: 250525, rate: 0.32 }
+    - { up_to: 626350, rate: 0.35 }
+    - { up_to: null, rate: 0.37 }
+  mfj:
+    - { up_to: 23850, rate: 0.10 }
+    - { up_to: 96950, rate: 0.12 }
+    - { up_to: 206700, rate: 0.22 }
+    - { up_to: 394600, rate: 0.24 }
+    - { up_to: 501050, rate: 0.32 }
+    - { up_to: 751600, rate: 0.35 }
+    - { up_to: null, rate: 0.37 }
+
+# LTCG / qualified dividend brackets (top of 0% and 15% bands on *total* taxable income)
+ltcg_brackets:
+  single:
+    zero_pct_up_to: 48350
+    fifteen_pct_up_to: 533400
+  mfj:
+    zero_pct_up_to: 96700
+    fifteen_pct_up_to: 600050
+
+irmaa_magi_threshold_mfj: 206000
+aca_subsidy_cliff_mfj: 60000
+
+# Social Security provisional income tiers (IRS Pub. 915 style)
+social_security_taxation:
+  mfj:
+    tier1_up_to: 32000
+    tier2_up_to: 44000
+  single:
+    tier1_up_to: 25000
+    tier2_up_to: 34000
+
+# Net Investment Income Tax (Form 8960)
+niit:
+  rate: 0.038
+  magi_threshold:
+    mfj: 250000
+    single: 200000
+
+rmd_start_age: 75

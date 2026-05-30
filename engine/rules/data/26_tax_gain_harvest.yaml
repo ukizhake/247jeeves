@@ -1,0 +1,15 @@
+rule_name: tax_gain_harvest
+title: Tax gain harvesting in 0% LTCG bracket
+phase: early_retirement
+source: "Richer Retirement Ch. 24 / slide 105"
+conditions:
+  - phase_early_retirement
+  - ltcg_room_available
+  - has_taxable_balance
+actions:
+  - recommend_tax_gain_harvest
+  - recommend_0pct_ltcg_harvest
+priority: 17
+tradeoffs:
+  - Resets basis — future gains may be larger
+rationale: Intentionally realize LTCG within the 0% bracket to step up cost basis at little or no federal tax.

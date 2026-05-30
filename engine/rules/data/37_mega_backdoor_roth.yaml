@@ -1,0 +1,13 @@
+rule_name: mega_backdoor_roth
+title: Mega Backdoor Roth via workplace plan
+phase: early_retirement
+source: "Richer Retirement Ch. 9 / slide 301"
+conditions:
+  - has_roth_balance
+  - high_traditional_ratio
+actions:
+  - recommend_mega_backdoor_roth
+priority: 46
+tradeoffs:
+  - Requires plan allowing after-tax contributions and in-service distributions
+rationale: After-tax 401(k) contributions rolled to Roth build large tax-free basis for ACA-year spending and conversions.

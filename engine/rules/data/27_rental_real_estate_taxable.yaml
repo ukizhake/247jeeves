@@ -1,0 +1,12 @@
+rule_name: rental_real_estate_taxable
+title: Hold rental real estate outside retirement accounts
+phase: early_retirement
+source: "Richer Retirement Ch. 26 / slides 102–103"
+conditions:
+  - has_rental_income
+actions:
+  - recommend_rental_in_taxable
+priority: 30
+tradeoffs:
+  - Self-directed IRA prohibited transaction rules; no depreciation in IRA
+rationale: Rental in taxable/rev trust allows depreciation deductions, lighter taxation, and step-up basis at death.

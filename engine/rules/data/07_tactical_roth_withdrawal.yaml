@@ -1,0 +1,15 @@
+rule_name: tactical_roth_withdrawal
+title: Tactical Roth withdrawals near bracket edges
+phase: early_retirement
+source: "Richer Retirement #49 (Principle 7)"
+conditions:
+  - phase_early_retirement
+  - near_22_bracket
+  - has_roth_balance
+actions:
+  - recommend_tactical_roth_to_avoid_bracket
+priority: 19
+tradeoffs:
+  - Using Roth today reduces tax-free compounding later
+rationale: A small Roth withdrawal can avoid pushing ordinary income into a higher bracket or gains into 15% LTCG.
+

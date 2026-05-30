@@ -1,0 +1,15 @@
+rule_name: pre_rmd_limit_roth_conversions
+title: Roth conversions less attractive after 70
+phase: pre_rmd
+source: "Richer Retirement slide 42"
+conditions:
+  - phase_pre_rmd
+  - age_ge_70
+  - has_traditional_ira
+actions:
+  - caution_roth_conversion_post_70
+  - recommend_qcd
+priority: 20
+tradeoffs:
+  - QCDs require charitable intent
+rationale: Age 70 to RMD start is often better for QCDs and HSA-for-Medicare than large Roth conversions.

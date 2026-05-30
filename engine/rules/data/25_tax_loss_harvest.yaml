@@ -1,0 +1,14 @@
+rule_name: tax_loss_harvest
+title: Tax loss harvesting in taxable accounts
+phase: early_retirement
+source: "Richer Retirement Ch. 23 / slide 104"
+conditions:
+  - phase_early_retirement
+  - has_taxable_balance
+  - under_medicare
+actions:
+  - recommend_tax_loss_harvest
+priority: 29
+tradeoffs:
+  - Wash-sale rules apply to substantially identical securities
+rationale: Realize losses in taxable brokerage to offset gains and lower MAGI for ACA Premium Tax Credit.

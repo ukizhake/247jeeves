@@ -1,0 +1,13 @@
+rule_name: future_rmd_shock
+title: Future RMD shock risk
+phase: early_retirement
+source: "Richer Retirement slide 54"
+conditions:
+  - projected_rmd_gt_spending
+actions:
+  - warn_future_rmd_shock
+priority: 15
+tradeoffs:
+  - Higher future Medicare premiums possible
+  - More Social Security taxation later
+rationale: Large IRA balances may force taxable RMDs above spending needs.

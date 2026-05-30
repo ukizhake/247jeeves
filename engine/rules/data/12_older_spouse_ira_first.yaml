@@ -1,0 +1,14 @@
+rule_name: older_spouse_ira_first
+title: Draw from older spouse's pre-tax accounts first
+phase: pre_rmd
+source: "Richer Retirement Principle 4 / slide 279"
+conditions:
+  - has_spouse
+  - spouse_older
+  - has_traditional_ira
+actions:
+  - recommend_older_spouse_ira_first
+priority: 14
+tradeoffs:
+  - Requires tracking separate spouse account balances (not modeled yet)
+rationale: The older spouse faces RMDs sooner — reduce their traditional balance first via withdrawals, QCDs, and conversions.

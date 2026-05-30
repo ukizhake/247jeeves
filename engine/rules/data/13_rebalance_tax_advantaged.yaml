@@ -1,0 +1,13 @@
+rule_name: rebalance_tax_advantaged
+title: Rebalance inside tax-advantaged accounts
+phase: early_retirement
+source: "Richer Retirement Principle 5 / slide 279"
+conditions:
+  - has_traditional_ira
+  - has_taxable_balance
+actions:
+  - recommend_rebalance_tax_advantaged
+priority: 26
+tradeoffs:
+  - May need to sell in taxable once to fund asset-location shift
+rationale: Rebalancing in IRA/Roth avoids triggering capital gains in taxable accounts.

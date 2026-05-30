@@ -1,0 +1,14 @@
+rule_name: living_expenses_reduce_rmd
+title: Spending from traditional IRA lowers future RMDs
+phase: golden_years
+source: "Richer Retirement slides 88–90 (Estelle, Bethany)"
+conditions:
+  - phase_golden_years
+  - has_traditional_ira
+actions:
+  - recommend_living_expenses_reduce_rmd
+  - recommend_withdraw_traditional
+priority: 16
+tradeoffs:
+  - Higher current-year tax vs lower future RMD shock
+rationale: Don't hoard pre-tax accounts — living expenses paid from IRA reduce balance and RMDs; effective rates often stay modest.

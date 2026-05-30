@@ -1,0 +1,17 @@
+rule_name: goldilocks_ptc
+title: Goldilocks MAGI for Premium Tax Credit
+phase: early_retirement
+source: "Richer Retirement slide 97 / Frank & Dana Ch. 10"
+conditions:
+  - phase_early_retirement
+  - under_medicare
+  - has_taxable_balance
+  - has_traditional_ira
+  - has_roth_balance
+actions:
+  - recommend_goldilocks_ptc
+  - recommend_blended_distributions_for_ptc
+priority: 22
+tradeoffs:
+  - All-Roth funding may leave MAGI too low; all-IRA too high for PTC
+rationale: Taxable (high basis) + modest Roth conversions hits the PTC sweet spot — not too hot, not too cold.

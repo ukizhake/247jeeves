@@ -1,0 +1,13 @@
+rule_name: inherited_ira_before_59_half
+title: Inherited IRA strategy before 59½
+phase: early_retirement
+source: "Richer Retirement Ch. 12 / slide 68"
+conditions:
+  - age_lt_59
+  - has_traditional_ira
+actions:
+  - recommend_inherited_ira_strategy
+priority: 35
+tradeoffs:
+  - Rolling to own IRA before 59½ triggers 10% penalty on early distributions
+rationale: Surviving spouses under 59½ may keep inherited IRA separate for penalty-free access; roll to own IRA after 59½.

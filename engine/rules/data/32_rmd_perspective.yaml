@@ -1,0 +1,13 @@
+rule_name: rmd_perspective
+title: RMDs are manageable — don't over-fear them
+phase: rmd_years
+source: "Richer Retirement slides 88–90"
+conditions:
+  - phase_rmd_years
+  - has_traditional_ira
+actions:
+  - recommend_rmd_perspective
+priority: 32
+tradeoffs:
+  - IRMAA and widow trap still matter at high balances
+rationale: RMD years are a small slice of retirement; effective rates often stay under 12–22% with asset location and QCDs.

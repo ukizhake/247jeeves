@@ -1,0 +1,13 @@
+rule_name: ira_withholding_taxes
+title: Pay taxes via IRA withholding
+phase: golden_years
+source: "Richer Retirement Ch. 13 / slide 87"
+conditions:
+  - phase_golden_years
+  - has_traditional_ira
+actions:
+  - recommend_ira_withholding
+priority: 33
+tradeoffs:
+  - Reduces IRA balance (also lowers future RMDs)
+rationale: Late-year IRA distribution with high withholding pays federal tax without creating separate taxable income events.

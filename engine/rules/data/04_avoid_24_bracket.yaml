@@ -1,0 +1,14 @@
+rule_name: avoid_24_bracket
+title: Avoid the 24% marginal bracket
+phase: early_retirement
+source: "Richer Retirement slide 29"
+conditions:
+  - phase_early_retirement
+  - near_24_bracket
+  - has_roth_balance
+actions:
+  - recommend_withdraw_roth
+priority: 12
+tradeoffs:
+  - Depletes Roth that could grow tax-free
+rationale: Joe & Jane avoided 24% by taking the last dollars from Roth instead of traditional IRA.

@@ -1,0 +1,15 @@
+rule_name: bronze_plan_hsa
+title: Bronze ACA plan + HSA for early retirees
+phase: early_retirement
+source: "Richer Retirement Ch. 13 / slide 87"
+conditions:
+  - phase_early_retirement
+  - under_medicare
+  - aca_warning
+actions:
+  - recommend_bronze_hsa
+  - warn_aca_cliff
+priority: 21
+tradeoffs:
+  - Higher deductibles; bronze must qualify as HDHP for HSA
+rationale: Bronze HDHP enables HSA contributions that lower MAGI, increase PTC, and fund tax-free medical expenses.

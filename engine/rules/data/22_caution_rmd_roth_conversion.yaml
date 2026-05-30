@@ -1,0 +1,13 @@
+rule_name: caution_rmd_roth_conversion
+title: Roth conversions rarely help after RMDs start
+phase: rmd_years
+source: "Richer Retirement slide 63"
+conditions:
+  - phase_rmd_years
+  - has_traditional_ira
+actions:
+  - caution_roth_conversion_rmd_years
+priority: 8
+tradeoffs:
+  - RMD must be satisfied first — cannot convert RMD dollars
+rationale: Conversion income stacks on RMDs and Social Security; satisfy RMD via distribution or QCD before any conversion.

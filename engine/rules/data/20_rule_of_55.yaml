@@ -1,0 +1,14 @@
+rule_name: rule_of_55
+title: Rule of 55 for early 401(k) access
+phase: early_retirement
+source: "Richer Retirement Ch. 12 / slide 67"
+conditions:
+  - phase_early_retirement
+  - age_55_to_59
+  - has_traditional_ira
+actions:
+  - recommend_rule_of_55
+priority: 11
+tradeoffs:
+  - Only applies to employer plan of last separation; not IRAs; avoid rollover before 59½
+rationale: Penalty-free distributions from the employer 401(k) you left in the year you turn 55+ — more flexible than 72(t).

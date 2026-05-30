@@ -1,0 +1,22 @@
+rule_name: early_retirement_roth_conversion
+title: Roth conversion window
+phase: early_retirement
+source: "Richer Retirement slides 26, 39"
+goal: reduce_future_rmd
+conditions:
+  - phase_early_retirement
+  - before_rmd
+  - before_ss
+  - traditional_ira_balance_gt
+  - bracket_room_22_gt
+actions:
+  - recommend_roth_conversion
+  - recommend_withdraw_taxable
+constraints:
+  - stay_below_bracket
+priority: 10
+tradeoffs:
+  - Increases current-year MAGI
+  - May affect ACA subsidies if under 65
+  - Pays tax now to reduce future RMDs
+rationale: Low-income early retirement years are ideal for Roth conversions.

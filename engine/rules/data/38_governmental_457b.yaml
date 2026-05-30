@@ -1,0 +1,14 @@
+rule_name: governmental_457b
+title: Governmental 457(b) for penalty-free early access
+phase: early_retirement
+source: "Richer Retirement Ch. 9 / slide 85"
+conditions:
+  - phase_early_retirement
+  - age_lt_59
+  - has_traditional_ira
+actions:
+  - recommend_457b_early_access
+priority: 47
+tradeoffs:
+  - Cannot roll 457(b) to IRA; limited to public sector / nonprofits
+rationale: No 10% early withdrawal penalty; can max both 457(b) and 401(k)/403(b) deferrals from same employer.

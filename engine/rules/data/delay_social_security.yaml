@@ -1,0 +1,13 @@
+rule_name: delay_social_security
+title: Delay Social Security
+phase: early_retirement
+source: "Richer Retirement slide 40"
+conditions:
+  - phase_early_retirement
+  - before_ss
+actions:
+  - recommend_delay_ss
+priority: 20
+tradeoffs:
+  - Requires other income sources until claiming age
+rationale: Delaying SS can increase lifetime benefits and reduce early MAGI spikes.

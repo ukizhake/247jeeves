@@ -1,0 +1,15 @@
+rule_name: avoid_roth_conversion_withholding
+title: Avoid withholding on Roth conversions pre-Medicare
+phase: early_retirement
+source: "Richer Retirement Ch. 13 / slide 87"
+conditions:
+  - phase_early_retirement
+  - under_medicare
+  - has_tax_free_conversion_room
+actions:
+  - recommend_avoid_roth_withholding
+  - recommend_roth_conversion_tax_free
+priority: 23
+tradeoffs:
+  - Must pay tax via estimated payments or separate withholding source
+rationale: Withholding on conversions reduces net conversion and complicates PTC MAGI planning in ACA years.

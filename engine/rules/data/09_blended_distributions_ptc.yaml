@@ -1,0 +1,16 @@
+rule_name: blended_distributions_for_ptc
+title: Blend distributions to smooth MAGI for PTC
+phase: early_retirement
+source: "Richer Retirement #51 (Principle 8) / Raj & Priya"
+conditions:
+  - phase_early_retirement
+  - under_medicare
+  - has_taxable_balance
+  - has_traditional_ira
+actions:
+  - recommend_blended_distributions_for_ptc
+priority: 28
+tradeoffs:
+  - Needs real ACA/Poverty-level modeling to quantify
+rationale: Blending taxable + traditional + Roth can smooth income and help maintain ACA Premium Tax Credits.
+

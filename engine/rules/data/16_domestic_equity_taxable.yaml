@@ -1,0 +1,14 @@
+rule_name: domestic_equity_in_taxable
+title: Asset location — domestic equity in taxable
+phase: early_retirement
+source: "Richer Retirement slides 76, 95–96"
+conditions:
+  - has_taxable_balance
+  - has_traditional_ira
+actions:
+  - recommend_domestic_equity_taxable
+  - recommend_asset_location_bonds_ira
+priority: 24
+tradeoffs:
+  - International equities may belong in Roth (foreign tax credit limits)
+rationale: Domestic index funds have low yields and high QDI%; bonds and high-yield assets belong in pre-tax accounts.

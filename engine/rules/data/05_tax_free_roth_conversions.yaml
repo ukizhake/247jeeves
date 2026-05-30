@@ -1,0 +1,17 @@
+rule_name: tax_free_roth_conversions
+title: Roth conversion sheltered by deductions (\"tax-free\" conversion room)
+phase: golden_years
+source: "Richer Retirement #45 (Principle 3) / Paul & Jessica example"
+conditions:
+  - phase_golden_years
+  - before_rmd
+  - has_traditional_ira
+  - has_tax_free_conversion_room
+actions:
+  - recommend_roth_conversion_tax_free
+priority: 9
+tradeoffs:
+  - Conversions can still affect NIIT/IRMAA thresholds and ACA is not relevant after 65
+  - May push LTCG/QDI into 15% depending on your gains/dividends
+rationale: If deductions exceed ordinary income, some Roth conversion may be sheltered at 0% ordinary tax.
+

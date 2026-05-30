@@ -1,0 +1,13 @@
+rule_name: rmd_qcd_strategy
+title: RMD years — QCD and Roth withdrawals
+phase: rmd_years
+source: "Richer Retirement slides 42, 48"
+conditions:
+  - phase_rmd_years
+  - rmd_exceeds_spending
+actions:
+  - recommend_qcd
+priority: 10
+tradeoffs:
+  - QCDs must go directly to qualified charities
+rationale: When RMD exceeds spending need, QCDs and selective Roth withdrawals reduce tax spikes.

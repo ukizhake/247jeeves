@@ -1,0 +1,14 @@
+rule_name: beneficiary_roth_conversions
+title: Roth conversions for beneficiary tax reduction
+phase: pre_rmd
+source: "Richer Retirement Ch. 17 / slide 94"
+conditions:
+  - phase_pre_rmd
+  - has_traditional_ira
+  - traditional_ira_balance_gt
+actions:
+  - recommend_beneficiary_roth
+priority: 40
+tradeoffs:
+  - Secondary to funding your own retirement; heirs inherit Roth tax-free
+rationale: Prepaying tax via conversions can reduce heirs' income tax on inherited IRAs — only if you can afford the conversion.

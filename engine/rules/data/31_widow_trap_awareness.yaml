@@ -1,0 +1,14 @@
+rule_name: widow_trap_awareness
+title: Plan for the widow(er) tax trap
+phase: early_retirement
+source: "Richer Retirement slide 31"
+conditions:
+  - phase_early_retirement
+  - traditional_ira_balance_gt
+  - before_ss
+actions:
+  - warn_widow_trap
+priority: 22
+tradeoffs:
+  - Roth 401(k) during working years forfeits current deduction
+rationale: Surviving spouse faces single brackets and taxable Social Security — Roth can reduce future widow-year taxes.

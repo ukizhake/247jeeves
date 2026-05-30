@@ -1,0 +1,14 @@
+rule_name: unneeded_rmd_tactics
+title: When RMD exceeds spending need
+phase: rmd_years
+source: "Richer Retirement slide 63"
+conditions:
+  - phase_rmd_years
+  - rmd_exceeds_spending
+actions:
+  - recommend_unneeded_rmd_tactics
+  - recommend_qcd
+priority: 9
+tradeoffs:
+  - Reinvesting after-tax RMD still creates taxable income
+rationale: QCDs, selective Roth withdrawals, and HSA/Medicare tactics help when RMD income exceeds lifestyle need.

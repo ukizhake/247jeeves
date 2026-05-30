@@ -1,0 +1,15 @@
+rule_name: income_layering
+title: Tax-smart withdrawal sequence
+phase: early_retirement
+source: "Richer Retirement slide 35"
+conditions:
+  - phase_early_retirement
+  - has_taxable_balance
+actions:
+  - recommend_income_layering
+  - recommend_withdraw_taxable
+priority: 5
+tradeoffs:
+  - Selling taxable lots realizes capital gains
+  - Pre-tax withdrawals raise MAGI for ACA/IRMAA
+rationale: Blend Roth/cash, then taxable (LTCG only), then minimal pre-tax to fund lifestyle while keeping MAGI low.

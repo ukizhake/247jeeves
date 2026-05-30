@@ -1,0 +1,14 @@
+rule_name: keep_ordinary_income_low
+title: Keep ordinary income low for flexibility
+phase: pre_rmd
+source: "Richer Retirement Principle 2 / slide 277"
+conditions:
+  - phase_pre_rmd
+  - has_traditional_ira
+actions:
+  - recommend_keep_ordinary_income_low
+  - recommend_asset_location_bonds_ira
+priority: 20
+tradeoffs:
+  - May limit Roth conversion headroom in golden years
+rationale: Low ordinary income lowers current tax, opens Roth conversions, maximizes PTC, and reduces SS/RMD taxation.

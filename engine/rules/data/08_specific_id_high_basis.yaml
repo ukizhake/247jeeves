@@ -1,0 +1,14 @@
+rule_name: specific_id_high_basis_lots
+title: Reduce gains by selling high-basis lots first
+phase: early_retirement
+source: "Richer Retirement #42 (high-basis lots first)"
+conditions:
+  - phase_early_retirement
+  - has_taxable_balance
+actions:
+  - recommend_specific_id_high_basis
+priority: 30
+tradeoffs:
+  - Requires good lot tracking and broker settings
+rationale: Specific identification and high-basis lots can reduce realized gains in taxable sales.
+

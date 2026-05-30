@@ -1,0 +1,353 @@
+import { useState } from 'react'
+import { createProfile, monteCarloProfile, simulateProfile, updateProfile } from './api/client'
+import { BalanceChart } from './components/BalanceChart'
+import { MonteCarloChart } from './components/MonteCarloChart'
+import { MonteCarloSummary } from './components/MonteCarloSummary'
+import { ProfileForm, validateProfileSocialSecurity } from './components/ProfileForm'
+import { Recommendations } from './components/Recommendations'
+import { SimulationTable } from './components/SimulationTable'
+import { StressComparison } from './components/StressComparison'
+import { SummaryCards } from './components/SummaryCards'
+import { RETURN_SCENARIOS, type ReturnScenarioId } from './constants/returnScenarios'
+import { defaultProfile, defaultSingleProfile } from './defaultProfile'
+import type { MonteCarloResult, Profile, ScenarioOverrides, SimulationResult } from './types'
+
+function scenarioLabel(id: ReturnScenarioId): string {
+  return RETURN_SCENARIOS.find((s) => s.id === id)?.label ?? id
+}
+
+function App() {
+  const [profile, setProfile] = useState<Profile>(defaultProfile)
+  const [profileId, setProfileId] = useState<number | null>(null)
+  const [result, setResult] = useState<SimulationResult | null>(null)
+  const [stressResults, setStressResults] = useState<SimulationResult[] | null>(null)
+  const [monteCarloResult, setMonteCarloResult] = useState<MonteCarloResult | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [rothOverride, setRothOverride] = useState<string>('')
+  const [returnScenario, setReturnScenario] = useState<ReturnScenarioId>('base')
+  const [netPortfolioIncome, setNetPortfolioIncome] = useState(true)
+
+  function buildScenarioOverrides(name: string, scenarioId: ReturnScenarioId): ScenarioOverrides {
+    const rothTrimmed = rothOverride.trim()
+    let rothConversion: number | null = null
+    if (rothTrimmed !== '') {
+      const parsed = parseFloat(rothTrimmed)
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        throw new Error('Roth conversion override must be a non-negative number (e.g. 20000).')
+      }
+      rothConversion = parsed
+    }
+    return {
+      name,
+      roth_conversion_annual: rothConversion,
+      target_bracket_rate: 0.22,
+      return_scenario: scenarioId,
+      net_portfolio_income: netPortfolioIncome,
+    }
+  }
+
+  async function ensureProfileId(): Promise<number> {
+    if (profileId) {
+      const saved = await updateProfile(profileId, profile)
+      setProfile(saved.profile)
+      return profileId
+    }
+    const created = await createProfile(profile)
+    setProfileId(created.id)
+    setProfile(created.profile)
+    return created.id
+  }
+
+  async function runSimulate() {
+    setLoading(true)
+    setError(null)
+    setStressResults(null)
+    setMonteCarloResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const id = await ensureProfileId()
+      const sim = await simulateProfile(
+        id,
+        buildScenarioOverrides(
+          rothOverride.trim() === '' ? `Base (${scenarioLabel(returnScenario)})` : `Roth override`,
+          returnScenario,
+        ),
+      )
+      setResult(sim.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Simulation failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function compareStressScenarios() {
+    setLoading(true)
+    setError(null)
+    setResult(null)
+    setMonteCarloResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const id = await ensureProfileId()
+      const results: SimulationResult[] = []
+      for (const scenario of RETURN_SCENARIOS) {
+        const sim = await simulateProfile(
+          id,
+          buildScenarioOverrides(`Compare: ${scenario.id}`, scenario.id),
+        )
+        results.push(sim.result)
+      }
+      setStressResults(results)
+      setResult(results[0])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Comparison failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function runMonteCarlo() {
+    setLoading(true)
+    setError(null)
+    setStressResults(null)
+    setResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const id = await ensureProfileId()
+      const scenario = buildScenarioOverrides('Monte Carlo', 'base')
+      const mc = await monteCarloProfile(id, { scenario, num_paths: 500 })
+      setMonteCarloResult(mc.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Monte Carlo failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const phase = result?.years[0]?.phase ?? '—'
+
+  return (
+    <div className="min-h-screen w-full px-3 py-6 sm:px-4">
+      <header className="mx-auto mb-8 max-w-[1600px] border-b border-slate-800 pb-6">
+        <p className="text-sm font-medium text-emerald-400">Phase 2b · Monte Carlo & tax sequencing</p>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight">outlast.money</h1>
+        <p className="mt-2 max-w-2xl text-slate-400">
+          Retirement tax intelligence — withdrawal sequencing, Roth conversions, and RMD
+          forecasting. Educational model only; not tax advice.
+        </p>
+      </header>
+
+      <div className="flex w-full flex-col gap-6">
+        <section className="mx-auto w-full max-w-[1600px]">
+          <h2 className="mb-4 text-lg font-semibold">Your plan</h2>
+          <ProfileForm profile={profile} onChange={setProfile} disabled={loading} />
+
+          <div className="mt-4 grid max-w-3xl gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="text-sm text-slate-400">Market scenario</span>
+              <select
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                value={returnScenario}
+                disabled={loading}
+                onChange={(e) => setReturnScenario(e.target.value as ReturnScenarioId)}
+              >
+                {RETURN_SCENARIOS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-sm text-slate-400">
+                Roth conversion / yr (blank = auto ~12% of trad. IRA)
+              </span>
+              <input
+                type="number"
+                min={0}
+                step={1000}
+                placeholder="e.g. 20000 for fixed; blank for auto"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                value={rothOverride}
+                disabled={loading}
+                onChange={(e) => setRothOverride(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <label className="mt-3 flex max-w-3xl items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={netPortfolioIncome}
+              disabled={loading}
+              onChange={(e) => setNetPortfolioIncome(e.target.checked)}
+              className="rounded border-slate-600"
+            />
+            Net portfolio income against spending (dividends, rental, SS reduce account withdrawals)
+          </label>
+
+          {result?.summary.first_year_roth_conversion != null && rothOverride.trim() === '' && (
+            <p className="mt-1 max-w-xl text-xs text-amber-400/90">
+              Year 1 auto Roth conversion:{' '}
+              {result.summary.first_year_roth_conversion.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0,
+              })}
+              . Enter 20000 above to cap it.
+            </p>
+          )}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={runSimulate}
+              disabled={loading}
+              className="rounded-lg bg-emerald-600 px-5 py-2.5 font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+            >
+              {loading ? 'Running…' : 'Run simulation'}
+            </button>
+            <button
+              type="button"
+              onClick={runMonteCarlo}
+              disabled={loading}
+              className="rounded-lg border border-violet-700 bg-violet-950/40 px-4 py-2.5 text-sm text-violet-200 hover:bg-violet-900/40 disabled:opacity-50"
+            >
+              {loading ? 'Running…' : 'Run Monte Carlo (500 paths)'}
+            </button>
+            <button
+              type="button"
+              onClick={compareStressScenarios}
+              disabled={loading}
+              className="rounded-lg border border-emerald-700 bg-emerald-950/40 px-4 py-2.5 text-sm text-emerald-200 hover:bg-emerald-900/40 disabled:opacity-50"
+            >
+              Compare all market scenarios
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setProfileId(null)
+                setResult(null)
+                setStressResults(null)
+                setMonteCarloResult(null)
+              }}
+              className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
+            >
+              New plan
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setProfile(defaultSingleProfile)
+                setProfileId(null)
+                setResult(null)
+                setStressResults(null)
+                setMonteCarloResult(null)
+              }}
+              className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
+            >
+              Single example
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setProfile(defaultProfile)
+                setProfileId(null)
+                setResult(null)
+                setStressResults(null)
+                setMonteCarloResult(null)
+              }}
+              className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
+            >
+              Couple example
+            </button>
+          </div>
+          {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        </section>
+
+        {monteCarloResult && (
+          <section className="mx-auto w-full max-w-[1600px]">
+            <h2 className="mb-3 text-lg font-semibold">Monte Carlo · sequence-of-returns risk</h2>
+            <MonteCarloSummary result={monteCarloResult} />
+            <div className="mt-4">
+              <MonteCarloChart result={monteCarloResult} />
+            </div>
+            <p className="mt-2 text-xs text-slate-500">
+              Each path randomizes annual returns (normal distribution, clipped ±50%). Success =
+              no year with unfunded spending. Uses your tax/withdrawal rules on every path.
+            </p>
+          </section>
+        )}
+
+        {stressResults && stressResults.length > 1 && (
+          <section className="mx-auto w-full max-w-[1600px]">
+            <h2 className="mb-3 text-lg font-semibold">Market scenario comparison</h2>
+            <StressComparison results={stressResults} />
+          </section>
+        )}
+
+        {result && (
+          <>
+            <section className="w-full">
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <h2 className="text-lg font-semibold">Year-by-year projection</h2>
+                <span className="rounded-full bg-slate-800 px-3 py-1 text-sm capitalize">
+                  Phase: {phase.replace(/_/g, ' ')}
+                </span>
+                {result.meta?.return_scenario && (
+                  <span className="rounded-full bg-slate-800 px-3 py-1 text-sm">
+                    Market: {String(result.meta.return_scenario).replace(/_/g, ' ')}
+                  </span>
+                )}
+              </div>
+              <SimulationTable years={result.years} />
+            </section>
+
+            <section className="mx-auto w-full max-w-[1600px]">
+              <SummaryCards summary={result.summary} />
+            </section>
+
+            <section className="mx-auto grid w-full max-w-[1600px] gap-8 lg:grid-cols-2">
+              <div>
+                <h2 className="mb-3 text-lg font-semibold">This year&apos;s recommendations</h2>
+                <Recommendations items={result.recommendations} />
+              </div>
+              <div>
+                <h2 className="mb-3 text-lg font-semibold">Account balances over time</h2>
+                <BalanceChart years={result.years} />
+              </div>
+            </section>
+          </>
+        )}
+
+        {!result && !stressResults && !monteCarloResult && (
+          <p className="mx-auto w-full max-w-[1600px] text-slate-500">
+            Enter your balances and run a simulation to see the year-by-year table, recommendations,
+            and charts.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default App

@@ -1,0 +1,14 @@
+rule_name: sell_bonds_taxable_first
+title: Sell least tax-efficient taxable holdings first
+phase: early_retirement
+source: "Richer Retirement slide 60 (Jose)"
+conditions:
+  - phase_early_retirement
+  - has_taxable_balance
+actions:
+  - recommend_sell_bonds_taxable_first
+  - recommend_dividend_cash
+priority: 27
+tradeoffs:
+  - Timing play — limited benefit in low-yield equity environments
+rationale: Sell bond/international lots in taxable first; direct dividends to cash to reduce capital gain sales.

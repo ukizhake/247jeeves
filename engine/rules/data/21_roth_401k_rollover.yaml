@@ -1,0 +1,14 @@
+rule_name: roth_401k_to_ira_rollover
+title: Roll Roth 401(k) to Roth IRA before 59½
+phase: early_retirement
+source: "Richer Retirement Ch. 12 / slide 69"
+conditions:
+  - phase_early_retirement
+  - age_lt_59
+  - has_roth_balance
+actions:
+  - recommend_roth_401k_rollover
+priority: 13
+tradeoffs:
+  - Pro-rata rules on Roth 401(k) are less favorable than Roth IRA ordering
+rationale: Roth IRA contribution ordering lets early retirees access basis tax- and penalty-free; Roth 401(k) uses pro-rata taxation.

@@ -1,0 +1,12 @@
+rule_name: backdoor_roth
+title: Backdoor Roth for high-MAGI savers
+phase: early_retirement
+source: "Richer Retirement Ch. 9 / slide 72"
+conditions:
+  - has_roth_balance
+actions:
+  - recommend_backdoor_roth
+priority: 45
+tradeoffs:
+  - Pro-rata rule if pre-tax IRA balance exists — roll to 401(k) first
+rationale: Nondeductible IRA contribution plus immediate Roth conversion when direct Roth contributions are phased out.

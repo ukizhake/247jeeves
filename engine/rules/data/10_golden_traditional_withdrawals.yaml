@@ -1,0 +1,15 @@
+rule_name: golden_years_traditional_first
+title: Golden years — fund from pre-tax accounts
+phase: golden_years
+source: "Richer Retirement slide 41"
+conditions:
+  - phase_golden_years
+  - has_traditional_ira
+actions:
+  - recommend_withdraw_traditional
+  - recommend_hidden_roth_ira
+priority: 10
+tradeoffs:
+  - IRA distributions are fully ordinary income
+  - May still be offset by standard and senior deductions
+rationale: From age 66 until RMDs, live primarily on traditional retirement accounts while delaying Social Security.

@@ -1,0 +1,14 @@
+rule_name: sequence_returns_taxable_first
+title: Taxable-first drawdown mitigates sequence risk
+phase: early_retirement
+source: "Richer Retirement slides 74, 100, 101"
+conditions:
+  - phase_early_retirement
+  - has_taxable_balance
+actions:
+  - recommend_sequence_returns_taxable
+  - recommend_withdraw_taxable
+priority: 6
+tradeoffs:
+  - Depletes taxable flexibility for PTC tuning later
+rationale: Drawing taxable accounts first defers ordinary-income tax in down markets — compare Frank & Dana vs Larry.
