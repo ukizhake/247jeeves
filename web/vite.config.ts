@@ -11,7 +11,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: process.env.OUTLAST_API_URL ?? 'http://127.0.0.1:8888',
+        target: process.env.JEEVES247_API_URL ?? 'http://127.0.0.1:8888',
         changeOrigin: true,
       },
     },

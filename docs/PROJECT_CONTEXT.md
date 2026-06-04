@@ -1,10 +1,10 @@
 # Project context (sanitized)
 
-Engineering decisions and mental model for outlast.money. **No personal portfolio data** — safe to keep in repo and reference in new Cursor chats.
+Repo: **247jeeves** · product: **247jeeves.com**. Engineering decisions and mental model. **No personal portfolio data** — safe to keep in repo and reference in new Cursor chats.
 
 ## What this app is
 
-Local-first retirement tax simulator. Four account buckets only: Traditional IRA, Roth IRA, taxable brokerage, cash. Rules engine recommends tactics from Richer Retirement-style YAML rules. Data stays in local SQLite (`outlast.db`, gitignored).
+Local-first retirement tax simulator. Four account buckets only: Traditional IRA, Roth IRA, taxable brokerage, cash. Rules engine recommends tactics from Richer Retirement-style YAML rules. Data stays in local SQLite (`247jeeves.db`, gitignored).
 
 ## Phase roadmap
 
@@ -196,7 +196,7 @@ Tax stacking: deductions reduce ordinary first; leftover can offset LTCG. Not si
 ## Privacy when using Cursor
 
 - Enable **Privacy Mode** (ZDR with model providers).
-- `.cursorignore` blocks `outlast.db`, `.env`, and `Portfolio_Positions*` CSV patterns.
+- `.cursorignore` blocks `247jeeves.db`, `.env`, and `Portfolio_Positions*` CSV patterns.
 - Delete chats that contained broker exports; run **Developer: GC Agent KV Blobs**.
 - Reference this file in new chats: `@docs/PROJECT_CONTEXT.md`
 

@@ -15,7 +15,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="outlast.money API",
+    title="247jeeves.com API",
     description="Retirement tax intelligence — rules-based simulator",
     version="0.1.0",
     lifespan=lifespan,
@@ -35,4 +35,4 @@ app.include_router(api_router, prefix="/api")
 
 @app.get("/")
 def root() -> dict[str, str]:
-    return {"message": "outlast.money API", "docs": "/docs", "api": "/api"}
+    return {"message": "247jeeves.com API", "docs": "/docs", "api": "/api"}

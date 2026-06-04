@@ -1,8 +1,8 @@
 # Secrets and local user data
 .env
 .env.*
-outlast.db
 
 # Broker portfolio exports — use in-app Fidelity import, not chat
 **/Portfolio_Positions*
 **/*_Positions_*.csv
+247jeeves.db

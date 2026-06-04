@@ -1,1 +1,1 @@
-"""FastAPI application for outlast.money."""
+"""FastAPI application for 247jeeves.com."""

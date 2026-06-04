@@ -1,7 +1,7 @@
 [project]
-name = "outlast-money"
+name = "247jeeves"
 version = "0.1.0"
-description = "Retirement tax intelligence — rules-based simulator"
+description = "247jeeves.com — retirement tax butler"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115.0",

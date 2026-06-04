@@ -386,14 +386,24 @@ function App() {
   return (
     <div className="min-h-screen w-full px-3 py-6 sm:px-4">
       <header className="mx-auto mb-8 max-w-[1600px] border-b border-slate-800 pb-6">
-        <p className="text-sm font-medium text-emerald-400">
-          Phase 3e · CAPE / SAFEMAX, annuity, spending schemes & rebalance
-        </p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">outlast.money</h1>
-        <p className="mt-2 max-w-2xl text-slate-400">
-          Retirement tax intelligence — withdrawal sequencing, Roth conversions, and RMD
-          forecasting. Educational model only; not tax advice.
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-8">
+          <img
+            src="/logo.png"
+            alt="247jeeves"
+            width={530}
+            height={330}
+            className="h-[4.5rem] w-auto max-w-[min(100%,280px)] shrink-0 object-contain object-left sm:h-20"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-brand">
+              Phase 3e · CAPE / SAFEMAX, annuity, spending schemes & rebalance
+            </p>
+            <p className="mt-2 max-w-2xl text-slate-400">
+              Your retirement tax butler — withdrawal sequencing, Roth conversions, and RMD
+              forecasting. Educational model only; not tax advice.
+            </p>
+          </div>
+        </div>
       </header>
 
       <div className="flex w-full flex-col gap-6">
