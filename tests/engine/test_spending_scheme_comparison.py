@@ -31,20 +31,21 @@ def _profile(**kwargs) -> Profile:
     return Profile(**defaults)
 
 
-def test_spending_scheme_comparison_four_schemes():
+def test_spending_scheme_comparison_five_schemes():
     p = _profile()
     result = run_spending_scheme_comparison(
         p,
         ScenarioOverrides(horizon_years=10, roth_conversion_annual=0),
         MonteCarloConfig(num_paths=60, seed=11),
     )
-    assert len(result.schemes) == 4
+    assert len(result.schemes) == 5
     schemes = {s.scheme for s in result.schemes}
     assert schemes == {
         WithdrawalScheme.COLA.value,
         WithdrawalScheme.FIXED_ANNUITY.value,
         WithdrawalScheme.PERFORMANCE_COLA.value,
         WithdrawalScheme.FIXED_PERCENTAGE.value,
+        WithdrawalScheme.FLOOR_CEILING.value,
     }
 
 

@@ -155,3 +155,22 @@ class SpendingSchemeComparisonResult(BaseModel):
     return_volatility: float
     schemes: list[SpendingSchemeSummary]
     meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class AnnuityVariantSummary(BaseModel):
+    variant: str
+    label: str
+    success_rate: float
+    median_final_wealth: float
+    p10_final_wealth: float
+    p90_final_wealth: float
+    median_lifetime_spending: float
+    median_portfolio_withdrawals: float
+
+
+class AnnuityComparisonResult(BaseModel):
+    education: dict[str, Any]
+    variants: list[AnnuityVariantSummary]
+    num_paths: int
+    seed: int | None
+    meta: dict[str, Any] = Field(default_factory=dict)

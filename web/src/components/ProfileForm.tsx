@@ -409,12 +409,14 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
         >
           <option value="performance_cola">Performance COLA (hold after down year)</option>
           <option value="cola">COLA every year</option>
-          <option value="fixed_annuity">Fixed nominal (book FA)</option>
+          <option value="fixed_annuity">Book FA (nominal lifestyle — not insurance)</option>
           <option value="fixed_percentage">Fixed % of portfolio (FP)</option>
+          <option value="floor_ceiling">Floor & ceiling (F&C)</option>
         </select>
       </label>
 
-      {(profile.withdrawal_scheme ?? 'performance_cola') === 'fixed_percentage' && (
+      {((profile.withdrawal_scheme ?? '') === 'fixed_percentage' ||
+        profile.withdrawal_scheme === 'floor_ceiling') && (
         <label className="block">
           <span className="text-sm text-slate-400">Initial withdrawal rate (% of portfolio)</span>
           <input
@@ -427,10 +429,44 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
             disabled={disabled}
             onChange={(e) => set({ initial_withdrawal_rate: num(e.target.value) / 100 })}
           />
-          <p className="mt-1 text-xs text-slate-500">
-            Deck reference ~4.7% on 55/40/5; spending moves with portfolio each year.
-          </p>
         </label>
+      )}
+
+      {profile.withdrawal_scheme === 'floor_ceiling' && (
+        <>
+          <label className="block">
+            <span className="text-sm text-slate-400">F&C max raise vs prior year (%)</span>
+            <input
+              type="number"
+              min={0}
+              max={50}
+              step={1}
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+              value={((profile.floor_ceiling_raise_pct ?? 0.1) * 100).toFixed(0)}
+              disabled={disabled}
+              onChange={(e) => set({ floor_ceiling_raise_pct: num(e.target.value) / 100 })}
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-slate-400">F&C max cut vs prior year (%)</span>
+            <input
+              type="number"
+              min={0}
+              max={50}
+              step={1}
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+              value={((profile.floor_ceiling_cut_pct ?? 0.1) * 100).toFixed(0)}
+              disabled={disabled}
+              onChange={(e) => set({ floor_ceiling_cut_pct: num(e.target.value) / 100 })}
+            />
+          </label>
+        </>
+      )}
+
+      {profile.withdrawal_scheme === 'fixed_percentage' && (
+        <p className="sm:col-span-2 text-xs text-slate-500">
+          FP: spending moves with portfolio each year (deck ~4.7% on 55/40/5).
+        </p>
       )}
 
       <label className="block">
@@ -480,8 +516,29 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
         />
       </label>
 
+      <p className="sm:col-span-2 text-sm font-medium text-amber-400/90">
+        Insurance annuity / SPIA (Phase 3d)
+      </p>
+
       <label className="block">
-        <span className="text-sm text-slate-400">Annuity / pension floor ($ / yr)</span>
+        <span className="text-sm text-slate-400">Guaranteed income type</span>
+        <select
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={profile.annuity_product_type ?? 'none'}
+          disabled={disabled}
+          onChange={(e) =>
+            set({ annuity_product_type: e.target.value as Profile['annuity_product_type'] })
+          }
+        >
+          <option value="none">None modeled</option>
+          <option value="pension">Pension / existing floor</option>
+          <option value="spira">SPIA (insurance)</option>
+          <option value="mixed">Pension + SPIA</option>
+        </select>
+      </label>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Guaranteed income ($ / yr)</span>
         <input
           type="number"
           min={0}
@@ -490,7 +547,36 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
           disabled={disabled}
           onChange={(e) => set({ annuity_income_annual: num(e.target.value) })}
         />
-        <p className="mt-1 text-xs text-slate-500">Reduces portfolio withdrawals in projections.</p>
+        <p className="mt-1 text-xs text-slate-500">Offsets portfolio withdrawals (pension or SPIA payout).</p>
+      </label>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Hypothetical SPIA premium ($)</span>
+        <input
+          type="number"
+          min={0}
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={profile.spira_premium_paid ?? 0}
+          disabled={disabled}
+          onChange={(e) => set({ spira_premium_paid: num(e.target.value) })}
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          For &quot;Compare annuity vs book FA&quot; — reduces investable balances in that analysis.
+        </p>
+      </label>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">SPIA payout rate (% of premium / yr)</span>
+        <input
+          type="number"
+          min={2}
+          max={15}
+          step={0.5}
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={((profile.spira_payout_rate ?? 0.06) * 100).toFixed(1)}
+          disabled={disabled}
+          onChange={(e) => set({ spira_payout_rate: num(e.target.value) / 100 })}
+        />
       </label>
 
       <label className="block">

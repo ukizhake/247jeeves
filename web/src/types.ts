@@ -5,6 +5,9 @@ export type WithdrawalScheme =
   | 'fixed_annuity'
   | 'performance_cola'
   | 'fixed_percentage'
+  | 'floor_ceiling'
+
+export type AnnuityProductType = 'none' | 'pension' | 'spira' | 'mixed'
 
 export interface AssetAllocation {
   stocks: number
@@ -49,7 +52,12 @@ export interface Profile {
   withdrawal_scheme?: WithdrawalScheme
   initial_withdrawal_rate?: number
   spending_cola_rate?: number | null
+  annuity_product_type?: AnnuityProductType
+  spira_premium_paid?: number
+  spira_payout_rate?: number
   annuity_income_annual?: number
+  floor_ceiling_raise_pct?: number
+  floor_ceiling_cut_pct?: number
   annuity_cola_rate?: number | null
   annual_review_month?: number
   performance_skip_cola_after_down_year?: boolean
@@ -221,6 +229,49 @@ export interface SpendingSchemeComparisonResult {
 export interface SpendingSchemeComparisonResponse {
   profile_id: number
   result: SpendingSchemeComparisonResult
+}
+
+export interface AnnuityYearOneSnapshot {
+  variant: string
+  label: string
+  total_wealth: number
+  annual_spending_target: number
+  annuity_income: number
+  portfolio_withdrawal_estimate: number
+  income_coverage_pct: number
+  withdrawal_scheme: string
+  notes: string
+}
+
+export interface AnnuityEducation {
+  book_fa_explanation: string
+  spira_explanation: string
+  year_one_snapshots: AnnuityYearOneSnapshot[]
+  suggestions: string[]
+}
+
+export interface AnnuityVariantSummary {
+  variant: string
+  label: string
+  success_rate: number
+  median_final_wealth: number
+  p10_final_wealth: number
+  p90_final_wealth: number
+  median_lifetime_spending: number
+  median_portfolio_withdrawals: number
+}
+
+export interface AnnuityComparisonResult {
+  education: AnnuityEducation
+  variants: AnnuityVariantSummary[]
+  num_paths: number
+  seed: number | null
+  meta?: Record<string, string | number | boolean | null>
+}
+
+export interface AnnuityComparisonResponse {
+  profile_id: number
+  result: AnnuityComparisonResult
 }
 
 export interface AnnualReviewResult {

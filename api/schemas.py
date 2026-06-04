@@ -5,6 +5,7 @@ from engine.annual_review import AnnualReviewResult
 from engine.import_.fidelity import FidelityImportResult
 from engine.models.profile import Profile, ScenarioOverrides
 from engine.models.simulation import (
+    AnnuityComparisonResult,
     MonteCarloResult,
     SimulationResult,
     SpendingSchemeComparisonResult,
@@ -82,3 +83,8 @@ class RebalanceReportResponse(BaseModel):
 class SpendingSchemeComparisonResponse(BaseModel):
     profile_id: int
     result: SpendingSchemeComparisonResult
+
+
+class AnnuityComparisonResponse(BaseModel):
+    profile_id: int
+    result: AnnuityComparisonResult

@@ -1,4 +1,5 @@
 import type {
+  AnnuityComparisonResponse,
   AnnualReviewResponse,
   FidelityImportResult,
   RebalanceReportResponse,
@@ -121,6 +122,23 @@ export async function annualReviewProfile(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prior_year_return: priorYearReturn ?? null,
+    }),
+  })
+  if (!res.ok) throw await apiError(res)
+  return res.json()
+}
+
+export async function annuityCompareProfile(
+  profileId: number,
+  options?: { scenario?: ScenarioOverrides; num_paths?: number; seed?: number },
+): Promise<AnnuityComparisonResponse> {
+  const res = await fetch(`${API}/profiles/${profileId}/annuity-compare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      scenario: options?.scenario ?? null,
+      num_paths: options?.num_paths ?? 500,
+      seed: options?.seed ?? null,
     }),
   })
   if (!res.ok) throw await apiError(res)

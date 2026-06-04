@@ -12,13 +12,15 @@ class WithdrawalScheme(str, Enum):
     FIXED_ANNUITY = "fixed_annuity"
     PERFORMANCE_COLA = "performance_cola"
     FIXED_PERCENTAGE = "fixed_percentage"
+    FLOOR_CEILING = "floor_ceiling"
 
 
 SCHEME_LABELS: dict[WithdrawalScheme, str] = {
     WithdrawalScheme.COLA: "COLA (inflation-adjusted lifestyle)",
-    WithdrawalScheme.FIXED_ANNUITY: "Fixed annuity (nominal spending)",
+    WithdrawalScheme.FIXED_ANNUITY: "Book FA (nominal lifestyle)",
     WithdrawalScheme.PERFORMANCE_COLA: "Performance COLA (hold after down year)",
     WithdrawalScheme.FIXED_PERCENTAGE: "Fixed % of portfolio (FP)",
+    WithdrawalScheme.FLOOR_CEILING: "Floor & ceiling (FP with governors)",
 }
 
 COMPARISON_SCHEMES: tuple[WithdrawalScheme, ...] = (
@@ -26,6 +28,7 @@ COMPARISON_SCHEMES: tuple[WithdrawalScheme, ...] = (
     WithdrawalScheme.FIXED_ANNUITY,
     WithdrawalScheme.PERFORMANCE_COLA,
     WithdrawalScheme.FIXED_PERCENTAGE,
+    WithdrawalScheme.FLOOR_CEILING,
 )
 
 
@@ -74,6 +77,21 @@ def spending_for_year(
             amount,
             f"FP {iwr * 100:.2f}% of start-of-year wealth (${wealth_start:,.0f})",
         )
+
+    if scheme == WithdrawalScheme.FLOOR_CEILING:
+        iwr = effective_withdrawal_rate(profile, wealth=wealth_start, base_annual=base_annual)
+        proposed = wealth_start * iwr if wealth_start > 0 else base_annual
+        if year_index == 0:
+            return proposed, f"F&C year one at {iwr * 100:.2f}% of wealth"
+        floor_amt = prior_spending * (1 - profile.floor_ceiling_cut_pct)
+        ceiling_amt = prior_spending * (1 + profile.floor_ceiling_raise_pct)
+        adjusted = max(floor_amt, min(ceiling_amt, proposed))
+        note = (
+            f"F&C: FP ${proposed:,.0f} capped to "
+            f"${floor_amt:,.0f}–${ceiling_amt:,.0f} band "
+            f"(−{profile.floor_ceiling_cut_pct * 100:.0f}%/+{profile.floor_ceiling_raise_pct * 100:.0f}%)"
+        )
+        return adjusted, note
 
     if year_index == 0:
         return base_annual, f"{scheme.value}: year-one spending"

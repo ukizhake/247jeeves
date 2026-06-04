@@ -7,8 +7,9 @@ export const SPENDING_SCHEME_OPTIONS: {
   { id: '', label: 'Use profile default' },
   { id: 'performance_cola', label: 'Performance COLA' },
   { id: 'cola', label: 'COLA' },
-  { id: 'fixed_annuity', label: 'Fixed nominal (FA)' },
+  { id: 'fixed_annuity', label: 'Book FA (nominal lifestyle)' },
   { id: 'fixed_percentage', label: 'Fixed % of portfolio (FP)' },
+  { id: 'floor_ceiling', label: 'Floor & ceiling (F&C)' },
 ]
 
 export function spendingSchemeLabel(scheme: string): string {

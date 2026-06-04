@@ -7,6 +7,8 @@ from dataclasses import dataclass
 
 from engine.models.profile import Profile, ScenarioOverrides
 from engine.models.simulation import (
+    AnnuityComparisonResult,
+    AnnuityVariantSummary,
     MonteCarloResult,
     MonteCarloYearBand,
     SpendingSchemeComparisonResult,
@@ -14,6 +16,7 @@ from engine.models.simulation import (
     StrategyComparisonResult,
     StrategySummary,
 )
+from engine.withdrawals.annuity import apply_spira_premium, compute_annuity_education
 from engine.simulator import projection_horizon_years, simulate
 from engine.withdrawals.policy import POLICY_LABELS, WithdrawalPolicy
 from engine.withdrawals.spending import COMPARISON_SCHEMES, SCHEME_LABELS, WithdrawalScheme
@@ -158,6 +161,101 @@ def run_monte_carlo(
 
 def _lifetime_spending(result) -> float:
     return sum(y.spending_target for y in result.years)
+
+
+def _lifetime_portfolio_withdrawals(result) -> float:
+    return sum(y.withdrawal_need for y in result.years)
+
+
+def run_annuity_comparison(
+    profile: Profile,
+    scenario: ScenarioOverrides | None = None,
+    config: MonteCarloConfig | None = None,
+) -> AnnuityComparisonResult:
+    """Compare current plan, book FA only, and optional SPIA on shared paths (Phase 3d)."""
+    scenario = scenario or ScenarioOverrides()
+    config = config or MonteCarloConfig()
+    horizon = projection_horizon_years(profile, scenario)
+    mean = config.mean_return if config.mean_return is not None else profile.return_rate
+    vol = (
+        config.return_volatility
+        if config.return_volatility is not None
+        else profile.return_volatility
+    )
+
+    return_paths = generate_return_paths(mean, vol, horizon, config.num_paths, config.seed)
+    education = compute_annuity_education(profile)
+
+    variant_profiles: list[tuple[str, str, Profile]] = [
+        ("current", "Your plan", profile),
+        (
+            "book_fa",
+            "Book FA only (no annuity floor)",
+            profile.model_copy(
+                update={
+                    "withdrawal_scheme": "fixed_annuity",
+                    "annuity_income_annual": 0,
+                    "annuity_product_type": "none",
+                }
+            ),
+        ),
+    ]
+    if profile.spira_premium_paid > 0:
+        variant_profiles.append(
+            ("spira", "With SPIA premium modeled", apply_spira_premium(profile)),
+        )
+
+    summaries: list[AnnuityVariantSummary] = []
+
+    for key, label, variant_profile in variant_profiles:
+        mc_scenario = scenario.model_copy(
+            update={"return_scenario": "base", "name": f"Annuity {key}"}
+        )
+        final_wealths: list[float] = []
+        lifetime_spending: list[float] = []
+        lifetime_port_wd: list[float] = []
+        successes = 0
+
+        for rates in return_paths:
+            result = simulate(
+                variant_profile,
+                mc_scenario,
+                return_rates=rates,
+                run_recommendations=False,
+            )
+            if _plan_succeeded(result):
+                successes += 1
+            final_wealths.append(_total_wealth(result))
+            lifetime_spending.append(_lifetime_spending(result))
+            lifetime_port_wd.append(_lifetime_portfolio_withdrawals(result))
+
+        wealth_sorted = sorted(final_wealths)
+        spend_sorted = sorted(lifetime_spending)
+        wd_sorted = sorted(lifetime_port_wd)
+        summaries.append(
+            AnnuityVariantSummary(
+                variant=key,
+                label=label,
+                success_rate=round(successes / config.num_paths, 4) if config.num_paths else 0.0,
+                median_final_wealth=round(_percentile(wealth_sorted, 0.50), 2),
+                p10_final_wealth=round(_percentile(wealth_sorted, 0.10), 2),
+                p90_final_wealth=round(_percentile(wealth_sorted, 0.90), 2),
+                median_lifetime_spending=round(_percentile(spend_sorted, 0.50), 2),
+                median_portfolio_withdrawals=round(_percentile(wd_sorted, 0.50), 2),
+            )
+        )
+
+    return AnnuityComparisonResult(
+        education=education.model_dump(),
+        variants=summaries,
+        num_paths=config.num_paths,
+        seed=config.seed,
+        meta={
+            "horizon_years": horizon,
+            "spira_premium_paid": profile.spira_premium_paid,
+            "annuity_income_annual": profile.annuity_income_annual,
+        },
+    )
 
 
 def run_spending_scheme_comparison(

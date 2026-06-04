@@ -6,6 +6,7 @@ from api.models_db import ProfileRecord, ScenarioRecord
 from api.schemas import (
     AnnualReviewRequest,
     AnnualReviewResponse,
+    AnnuityComparisonResponse,
     RebalanceReportResponse,
     SpendingSchemeComparisonResponse,
     MonteCarloRequest,
@@ -23,6 +24,7 @@ from engine.allocation.rebalance import compute_rebalance_report
 from engine.annual_review import compute_annual_review
 from engine.monte_carlo import (
     MonteCarloConfig,
+    run_annuity_comparison,
     run_monte_carlo,
     run_spending_scheme_comparison,
     run_strategy_comparison,
@@ -143,6 +145,23 @@ def annual_review_profile(
     body = body or AnnualReviewRequest()
     result = compute_annual_review(profile, prior_year_return=body.prior_year_return)
     return AnnualReviewResponse(profile_id=profile_id, result=result)
+
+
+@router.post("/{profile_id}/annuity-compare", response_model=AnnuityComparisonResponse)
+def annuity_compare_profile(
+    profile_id: int,
+    body: MonteCarloRequest | None = None,
+    db: Session = Depends(get_db),
+) -> AnnuityComparisonResponse:
+    record = db.get(ProfileRecord, profile_id)
+    if not record:
+        raise HTTPException(404, "Profile not found")
+    profile = Profile.model_validate_json(record.data_json)
+    body = body or MonteCarloRequest()
+    scenario = body.scenario if body.scenario else ScenarioOverrides()
+    config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
+    result = run_annuity_comparison(profile, scenario, config)
+    return AnnuityComparisonResponse(profile_id=profile_id, result=result)
 
 
 @router.post("/{profile_id}/spending-compare", response_model=SpendingSchemeComparisonResponse)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   annualReviewProfile,
+  annuityCompareProfile,
   createProfile,
   rebalanceReportProfile,
   monteCarloProfile,
@@ -9,6 +10,7 @@ import {
   strategyCompareProfile,
   updateProfile,
 } from './api/client'
+import { AnnuityComparison } from './components/AnnuityComparison'
 import { AnnualReview } from './components/AnnualReview'
 import { RebalanceReport } from './components/RebalanceReport'
 import { BalanceChart } from './components/BalanceChart'
@@ -25,6 +27,7 @@ import { RETURN_SCENARIOS, type ReturnScenarioId } from './constants/returnScena
 import { SPENDING_SCHEME_OPTIONS, spendingSchemeLabel } from './constants/spendingSchemes'
 import { defaultProfile, defaultSingleProfile } from './defaultProfile'
 import type {
+  AnnuityComparisonResult,
   AnnualReviewResult,
   MonteCarloResult,
   RebalanceReportResult,
@@ -51,6 +54,8 @@ function App() {
   const [rebalanceResult, setRebalanceResult] = useState<RebalanceReportResult | null>(null)
   const [spendingCompareResult, setSpendingCompareResult] =
     useState<SpendingSchemeComparisonResult | null>(null)
+  const [annuityCompareResult, setAnnuityCompareResult] =
+    useState<AnnuityComparisonResult | null>(null)
   const [priorYearReturn, setPriorYearReturn] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -100,6 +105,7 @@ function App() {
     setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -132,6 +138,7 @@ function App() {
     setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -165,6 +172,7 @@ function App() {
     setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -203,6 +211,7 @@ function App() {
     setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -246,6 +255,35 @@ function App() {
     }
   }
 
+  async function runAnnuityCompare() {
+    setLoading(true)
+    setError(null)
+    setStressResults(null)
+    setMonteCarloResult(null)
+    setStrategyCompareResult(null)
+    setAnnualReviewResult(null)
+    setRebalanceResult(null)
+    setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
+    setResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const id = await ensureProfileId()
+      const scenario = buildScenarioOverrides('Annuity compare', 'base')
+      const cmp = await annuityCompareProfile(id, { scenario, num_paths: 500 })
+      setAnnuityCompareResult(cmp.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Annuity comparison failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function runSpendingCompare() {
     setLoading(true)
     setError(null)
@@ -255,6 +293,7 @@ function App() {
     setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -282,6 +321,7 @@ function App() {
     setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -307,7 +347,7 @@ function App() {
     <div className="min-h-screen w-full px-3 py-6 sm:px-4">
       <header className="mx-auto mb-8 max-w-[1600px] border-b border-slate-800 pb-6">
         <p className="text-sm font-medium text-emerald-400">
-          Phase 3c · Spending schemes, review & rebalance
+          Phase 3d · Annuity vs book FA, spending schemes & rebalance
         </p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">outlast.money</h1>
         <p className="mt-2 max-w-2xl text-slate-400">
@@ -444,6 +484,14 @@ function App() {
             </button>
             <button
               type="button"
+              onClick={runAnnuityCompare}
+              disabled={loading}
+              className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-200 hover:bg-amber-900/40 disabled:opacity-50"
+            >
+              {loading ? 'Running…' : 'Annuity vs book FA'}
+            </button>
+            <button
+              type="button"
               onClick={runSpendingCompare}
               disabled={loading}
               className="rounded-lg border border-violet-700 bg-violet-950/40 px-4 py-2.5 text-sm text-violet-200 hover:bg-violet-900/40 disabled:opacity-50"
@@ -478,6 +526,7 @@ function App() {
                 setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -496,6 +545,7 @@ function App() {
                 setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -514,6 +564,7 @@ function App() {
                 setAnnualReviewResult(null)
     setRebalanceResult(null)
     setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -522,6 +573,13 @@ function App() {
           </div>
           {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
         </section>
+
+        {annuityCompareResult && (
+          <section className="mx-auto w-full max-w-[1600px]">
+            <h2 className="mb-3 text-lg font-semibold">Insurance annuity vs book FA</h2>
+            <AnnuityComparison result={annuityCompareResult} />
+          </section>
+        )}
 
         {rebalanceResult && (
           <section className="mx-auto w-full max-w-[1600px]">
@@ -623,7 +681,8 @@ function App() {
           !strategyCompareResult &&
           !annualReviewResult &&
           !rebalanceResult &&
-          !spendingCompareResult && (
+          !spendingCompareResult &&
+          !annuityCompareResult && (
           <p className="mx-auto w-full max-w-[1600px] text-slate-500">
             Enter your balances and run a simulation to see the year-by-year table, recommendations,
             and charts.

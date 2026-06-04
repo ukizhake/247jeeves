@@ -88,6 +88,23 @@ All deck-style **spending** paths on the simulator, annual review, Monte Carlo, 
 
 Code: `engine/withdrawals/spending.py`, `run_spending_scheme_comparison` in `engine/monte_carlo.py`
 
+### Phase 3d — Insurance annuity vs book FA (done)
+
+Clarifies two different “annuity” ideas from [A Richer Retirement withdrawals deck](https://docs.google.com/presentation/d/1S_luuPOwilH2mu9QwGQLPDzR3CYHmAtBHu3pNJS-DAo/edit?usp=sharing):
+
+| Concept | Model |
+|---------|--------|
+| **Book FA** | `withdrawal_scheme=fixed_annuity` — nominal lifestyle spending from portfolio (not insurance) |
+| **SPIA / pension** | `annuity_income_annual` offsets withdrawals; optional `spira_premium_paid` reduces investable balances in comparisons |
+| **Floor & ceiling (F&C)** | Fifth spending scheme: FP % capped vs prior year (`floor_ceiling_raise_pct` / `floor_ceiling_cut_pct`, default ±10%) |
+
+- Profile: `annuity_product_type`, `spira_premium_paid`, `spira_payout_rate`
+- API: `POST /api/profiles/{id}/annuity-compare` — year-one snapshots + MC variants (current, book FA only, SPIA if premium set)
+- UI: **Annuity vs book FA** button + SPIA fields in profile form
+- Spending compare now includes **5 schemes** (adds F&C)
+
+Code: `engine/withdrawals/annuity.py`, `run_annuity_comparison` in `engine/monte_carlo.py`
+
 ### Phase 2d — Richer returns (next)
 
 - 60/40 or equity/bond split with correlation
@@ -185,6 +202,7 @@ Tax stacking: deductions reduce ordinary first; leftover can offset LTCG. Not si
 | UI table | `web/src/components/SimulationTable.tsx` |
 | Strategy compare UI | `web/src/components/StrategyComparison.tsx` |
 | Rebalance report | `engine/allocation/rebalance.py`, `web/src/components/RebalanceReport.tsx` |
+| Annuity vs book FA | `engine/withdrawals/annuity.py`, `web/src/components/AnnuityComparison.tsx` |
 | Fidelity UI | `web/src/components/FidelityImport.tsx` |
 
 ## Run

@@ -128,9 +128,10 @@ class Profile(BaseModel):
         "fixed_annuity",
         "performance_cola",
         "fixed_percentage",
+        "floor_ceiling",
     ] = Field(
         "performance_cola",
-        description="COLA, fixed nominal (FA), performance COLA, or fixed % of portfolio (FP)",
+        description="COLA, book FA, performance COLA, FP, or floor & ceiling (F&C)",
     )
     initial_withdrawal_rate: float = Field(
         0.047,
@@ -143,6 +144,21 @@ class Profile(BaseModel):
         ge=0,
         le=0.1,
         description="Annual spending COLA; defaults to inflation_rate",
+    )
+    annuity_product_type: Literal["none", "pension", "spira", "mixed"] = Field(
+        "none",
+        description="Insurance SPIA vs pension floor — educational label (Phase 3d)",
+    )
+    spira_premium_paid: float = Field(
+        0,
+        ge=0,
+        description="Hypothetical lump sum moved to SPIA (reduces investable accounts in comparisons)",
+    )
+    spira_payout_rate: float = Field(
+        0.06,
+        ge=0.02,
+        le=0.15,
+        description="Estimated annual SPIA payout ÷ premium (quote from insurer; default 6%)",
     )
     annuity_income_annual: float = Field(
         0,
@@ -176,6 +192,18 @@ class Profile(BaseModel):
         ge=0,
         le=0.5,
         description="Optional cap on year-over-year spending cut",
+    )
+    floor_ceiling_raise_pct: float = Field(
+        0.10,
+        ge=0,
+        le=0.5,
+        description="F&C scheme: max year-over-year spending increase vs prior year",
+    )
+    floor_ceiling_cut_pct: float = Field(
+        0.10,
+        ge=0,
+        le=0.5,
+        description="F&C scheme: max year-over-year spending decrease vs prior year",
     )
     taxable_cost_basis_ratio: float = Field(
         0.8,
@@ -249,7 +277,13 @@ class ScenarioOverrides(BaseModel):
         description="Withdrawal order for supplemental spending (Phase 2c)",
     )
     spending_scheme_override: Optional[
-        Literal["cola", "fixed_annuity", "performance_cola", "fixed_percentage"]
+        Literal[
+            "cola",
+            "fixed_annuity",
+            "performance_cola",
+            "fixed_percentage",
+            "floor_ceiling",
+        ]
     ] = Field(
         None,
         description="Override profile withdrawal_scheme for this scenario run (Phase 3c)",
