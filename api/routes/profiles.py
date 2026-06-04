@@ -7,6 +7,8 @@ from api.schemas import (
     AnnualReviewRequest,
     AnnualReviewResponse,
     AnnuityComparisonResponse,
+    SafemaxReportRequest,
+    SafemaxReportResponse,
     RebalanceReportResponse,
     SpendingSchemeComparisonResponse,
     MonteCarloRequest,
@@ -29,6 +31,7 @@ from engine.monte_carlo import (
     run_spending_scheme_comparison,
     run_strategy_comparison,
 )
+from engine.withdrawals.safemax import compute_safemax_report
 from engine.models.profile import Profile, ScenarioOverrides
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
@@ -162,6 +165,25 @@ def annuity_compare_profile(
     config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
     result = run_annuity_comparison(profile, scenario, config)
     return AnnuityComparisonResponse(profile_id=profile_id, result=result)
+
+
+@router.post("/{profile_id}/safemax-report", response_model=SafemaxReportResponse)
+def safemax_report_profile(
+    profile_id: int,
+    body: SafemaxReportRequest | None = None,
+    db: Session = Depends(get_db),
+) -> SafemaxReportResponse:
+    record = db.get(ProfileRecord, profile_id)
+    if not record:
+        raise HTTPException(404, "Profile not found")
+    profile = Profile.model_validate_json(record.data_json)
+    body = body or SafemaxReportRequest()
+    result = compute_safemax_report(
+        profile,
+        run_mc_validation=body.run_mc_validation,
+        mc_paths=body.num_paths,
+    )
+    return SafemaxReportResponse(profile_id=profile_id, result=result)
 
 
 @router.post("/{profile_id}/spending-compare", response_model=SpendingSchemeComparisonResponse)

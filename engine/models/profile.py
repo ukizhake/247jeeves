@@ -225,6 +225,16 @@ class Profile(BaseModel):
         le=0.1,
         description="Skip rebalance trades when every sleeve is within this drift (e.g. 0.02 = 2%)",
     )
+    shiller_cape: Optional[float] = Field(
+        None,
+        ge=5,
+        le=60,
+        description="Current Shiller CAPE for SAFEMAX education (multpl.com/shiller-pe); omit for default",
+    )
+    inflation_regime: Literal["normal", "high"] = Field(
+        "normal",
+        description="Deck inflation regime for CAPE→SAFEMAX estimate (high subtracts ~1%)",
+    )
 
     @field_validator("social_security_annual_at_claim", "spouse_social_security_annual_at_claim")
     @classmethod

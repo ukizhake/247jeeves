@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 
 from engine.allocation.rebalance import RebalanceReport
 from engine.annual_review import AnnualReviewResult
+from engine.withdrawals.safemax import SafemaxReport
 from engine.import_.fidelity import FidelityImportResult
 from engine.models.profile import Profile, ScenarioOverrides
 from engine.models.simulation import (
@@ -88,3 +89,13 @@ class SpendingSchemeComparisonResponse(BaseModel):
 class AnnuityComparisonResponse(BaseModel):
     profile_id: int
     result: AnnuityComparisonResult
+
+
+class SafemaxReportRequest(BaseModel):
+    run_mc_validation: bool = True
+    num_paths: int = Field(200, ge=50, le=2000)
+
+
+class SafemaxReportResponse(BaseModel):
+    profile_id: int
+    result: SafemaxReport

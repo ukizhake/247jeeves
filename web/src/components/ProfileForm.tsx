@@ -470,6 +470,39 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
       )}
 
       <label className="block">
+        <span className="text-sm text-slate-400">Shiller CAPE (optional)</span>
+        <input
+          type="number"
+          min={5}
+          max={60}
+          step={0.1}
+          placeholder="e.g. 32"
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={profile.shiller_cape ?? ''}
+          disabled={disabled}
+          onChange={(e) => {
+            const v = e.target.value.trim()
+            set({ shiller_cape: v === '' ? null : num(v) })
+          }}
+        />
+      </label>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Inflation regime (CAPE estimate)</span>
+        <select
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={profile.inflation_regime ?? 'normal'}
+          disabled={disabled}
+          onChange={(e) =>
+            set({ inflation_regime: e.target.value as 'normal' | 'high' })
+          }
+        >
+          <option value="normal">Normal</option>
+          <option value="high">High inflation</option>
+        </select>
+      </label>
+
+      <label className="block">
         <span className="text-sm text-slate-400">Annual review month</span>
         <select
           className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"

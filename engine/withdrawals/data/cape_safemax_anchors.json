@@ -1,0 +1,8 @@
+[
+  {"cape": 9.31, "safemax": 0.113, "retirement_date": "1932-01-01", "note": "Post-crash low CAPE"},
+  {"cape": 9.31, "safemax": 0.0902, "retirement_date": "1984-04-01", "note": "1980s low CAPE"},
+  {"cape": 15.52, "safemax": 0.1051, "retirement_date": "1931-07-01", "note": ""},
+  {"cape": 15.53, "safemax": 0.0678, "retirement_date": "1987-10-01", "note": "Pre-1987 crash peak CAPE"},
+  {"cape": 21.64, "safemax": 0.078, "retirement_date": "1995-04-01", "note": ""},
+  {"cape": 21.69, "safemax": 0.054, "retirement_date": "1967-04-01", "note": "High inflation era"}
+]

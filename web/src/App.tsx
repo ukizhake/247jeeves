@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   annualReviewProfile,
   annuityCompareProfile,
+  safemaxReportProfile,
   createProfile,
   rebalanceReportProfile,
   monteCarloProfile,
@@ -11,6 +12,7 @@ import {
   updateProfile,
 } from './api/client'
 import { AnnuityComparison } from './components/AnnuityComparison'
+import { SafemaxReport } from './components/SafemaxReport'
 import { AnnualReview } from './components/AnnualReview'
 import { RebalanceReport } from './components/RebalanceReport'
 import { BalanceChart } from './components/BalanceChart'
@@ -28,6 +30,7 @@ import { SPENDING_SCHEME_OPTIONS, spendingSchemeLabel } from './constants/spendi
 import { defaultProfile, defaultSingleProfile } from './defaultProfile'
 import type {
   AnnuityComparisonResult,
+  SafemaxReportResult,
   AnnualReviewResult,
   MonteCarloResult,
   RebalanceReportResult,
@@ -56,6 +59,7 @@ function App() {
     useState<SpendingSchemeComparisonResult | null>(null)
   const [annuityCompareResult, setAnnuityCompareResult] =
     useState<AnnuityComparisonResult | null>(null)
+  const [safemaxResult, setSafemaxResult] = useState<SafemaxReportResult | null>(null)
   const [priorYearReturn, setPriorYearReturn] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -106,6 +110,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -139,6 +144,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -173,6 +179,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -212,6 +219,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -265,6 +273,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -284,6 +293,35 @@ function App() {
     }
   }
 
+  async function runSafemaxReport() {
+    setLoading(true)
+    setError(null)
+    setStressResults(null)
+    setMonteCarloResult(null)
+    setStrategyCompareResult(null)
+    setAnnualReviewResult(null)
+    setRebalanceResult(null)
+    setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
+    setSafemaxResult(null)
+    setResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const id = await ensureProfileId()
+      const report = await safemaxReportProfile(id, { num_paths: 200 })
+      setSafemaxResult(report.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'SAFEMAX report failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function runSpendingCompare() {
     setLoading(true)
     setError(null)
@@ -294,6 +332,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -322,6 +361,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -347,7 +387,7 @@ function App() {
     <div className="min-h-screen w-full px-3 py-6 sm:px-4">
       <header className="mx-auto mb-8 max-w-[1600px] border-b border-slate-800 pb-6">
         <p className="text-sm font-medium text-emerald-400">
-          Phase 3d · Annuity vs book FA, spending schemes & rebalance
+          Phase 3e · CAPE / SAFEMAX, annuity, spending schemes & rebalance
         </p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">outlast.money</h1>
         <p className="mt-2 max-w-2xl text-slate-400">
@@ -484,6 +524,14 @@ function App() {
             </button>
             <button
               type="button"
+              onClick={runSafemaxReport}
+              disabled={loading}
+              className="rounded-lg border border-indigo-700 bg-indigo-950/40 px-4 py-2.5 text-sm text-indigo-200 hover:bg-indigo-900/40 disabled:opacity-50"
+            >
+              {loading ? 'Running…' : 'CAPE / SAFEMAX report'}
+            </button>
+            <button
+              type="button"
               onClick={runAnnuityCompare}
               disabled={loading}
               className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-200 hover:bg-amber-900/40 disabled:opacity-50"
@@ -527,6 +575,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -546,6 +595,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -565,6 +615,7 @@ function App() {
     setRebalanceResult(null)
     setSpendingCompareResult(null)
     setAnnuityCompareResult(null)
+    setSafemaxResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -573,6 +624,13 @@ function App() {
           </div>
           {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
         </section>
+
+        {safemaxResult && (
+          <section className="mx-auto w-full max-w-[1600px]">
+            <h2 className="mb-3 text-lg font-semibold">CAPE & SAFEMAX education</h2>
+            <SafemaxReport result={safemaxResult} />
+          </section>
+        )}
 
         {annuityCompareResult && (
           <section className="mx-auto w-full max-w-[1600px]">

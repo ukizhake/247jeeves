@@ -8,6 +8,7 @@ import type {
   ProfileResponse,
   ScenarioOverrides,
   SimulateResponse,
+  SafemaxReportResponse,
   SpendingSchemeComparisonResponse,
   StrategyComparisonResponse,
 } from '../types'
@@ -122,6 +123,22 @@ export async function annualReviewProfile(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prior_year_return: priorYearReturn ?? null,
+    }),
+  })
+  if (!res.ok) throw await apiError(res)
+  return res.json()
+}
+
+export async function safemaxReportProfile(
+  profileId: number,
+  options?: { run_mc_validation?: boolean; num_paths?: number },
+): Promise<SafemaxReportResponse> {
+  const res = await fetch(`${API}/profiles/${profileId}/safemax-report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      run_mc_validation: options?.run_mc_validation ?? true,
+      num_paths: options?.num_paths ?? 200,
     }),
   })
   if (!res.ok) throw await apiError(res)

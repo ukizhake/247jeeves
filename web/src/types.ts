@@ -67,6 +67,8 @@ export interface Profile {
   target_allocation?: AssetAllocation
   current_allocation?: AssetAllocation | null
   rebalance_band_pct?: number
+  shiller_cape?: number | null
+  inflation_regime?: 'normal' | 'high'
 }
 
 export interface ScenarioOverrides {
@@ -272,6 +274,40 @@ export interface AnnuityComparisonResult {
 export interface AnnuityComparisonResponse {
   profile_id: number
   result: AnnuityComparisonResult
+}
+
+export interface CapeSafemaxAnchor {
+  cape: number
+  safemax: number
+  retirement_date: string
+  note: string
+}
+
+export interface SafemaxReportResult {
+  shiller_cape: number
+  cape_source: string
+  planning_horizon_years: number
+  estimated_safemax_pct: number
+  estimated_safemax_dollars: number
+  universal_rule_pct: number
+  current_implied_iwr_pct: number
+  current_annual_spending: number
+  spending_gap_vs_estimate: number
+  inflation_regime: string
+  horizon_adjustment_note: string
+  valuation_band: string
+  nearby_anchors: CapeSafemaxAnchor[]
+  suggestions: string[]
+  mc_paths: number
+  mc_success_at_current_spending: number | null
+  mc_success_at_estimated_safemax: number | null
+  mc_median_wealth_at_current: number | null
+  mc_median_wealth_at_estimated: number | null
+}
+
+export interface SafemaxReportResponse {
+  profile_id: number
+  result: SafemaxReportResult
 }
 
 export interface AnnualReviewResult {

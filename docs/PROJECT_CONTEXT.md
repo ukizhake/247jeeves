@@ -105,6 +105,18 @@ Clarifies two different “annuity” ideas from [A Richer Retirement withdrawal
 
 Code: `engine/withdrawals/annuity.py`, `run_annuity_comparison` in `engine/monte_carlo.py`
 
+### Phase 3e — CAPE / SAFEMAX education (done)
+
+Educational link between **Shiller CAPE** and **personal SAFEMAX** from [A Richer Retirement withdrawals deck](https://docs.google.com/presentation/d/1S_luuPOwilH2mu9QwGQLPDzR3CYHmAtBHu3pNJS-DAo/edit?usp=sharing):
+
+- **SAFEMAX** = max initial withdrawal rate that sustained a 30-year path for that historical retiree (not the universal 4.7% worst case)
+- **CAPE anchors** in `engine/withdrawals/data/cape_safemax_anchors.json` — piecewise interpolation + horizon / inflation adjustments
+- Profile: `shiller_cape` (optional), `inflation_regime` (`normal` | `high`)
+- API: `POST /api/profiles/{id}/safemax-report` — estimate vs universal 4.7%, implied IWR, deck anchor table, optional MC validation (200 paths)
+- UI: **CAPE / SAFEMAX report** button + CAPE fields in profile form
+
+Code: `engine/withdrawals/safemax.py`
+
 ### Phase 2d — Richer returns (next)
 
 - 60/40 or equity/bond split with correlation
