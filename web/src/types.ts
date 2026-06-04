@@ -2,6 +2,12 @@ export type FilingStatus = 'single' | 'mfj'
 
 export type WithdrawalScheme = 'cola' | 'fixed_annuity' | 'performance_cola'
 
+export interface AssetAllocation {
+  stocks: number
+  bonds: number
+  cash: number
+}
+
 export interface Accounts {
   traditional_ira: number
   roth_ira: number
@@ -45,6 +51,9 @@ export interface Profile {
   performance_max_raise_pct?: number | null
   performance_max_cut_pct?: number | null
   taxable_cost_basis_ratio?: number
+  target_allocation?: AssetAllocation
+  current_allocation?: AssetAllocation | null
+  rebalance_band_pct?: number
 }
 
 export interface ScenarioOverrides {
@@ -204,6 +213,44 @@ export interface AnnualReviewResult {
 export interface AnnualReviewResponse {
   profile_id: number
   result: AnnualReviewResult
+}
+
+export interface AllocationSlice {
+  asset: string
+  target_pct: number
+  current_pct: number
+  target_dollars: number
+  current_dollars: number
+  drift_dollars: number
+  drift_pct: number
+}
+
+export interface RebalanceTrade {
+  asset: string
+  action: string
+  amount: number
+  preferred_location: string
+}
+
+export interface RebalanceReportResult {
+  total_wealth: number
+  tax_advantaged_balance: number
+  taxable_balance: number
+  cash_balance: number
+  target: AssetAllocation
+  current: AssetAllocation
+  slices: AllocationSlice[]
+  trades: RebalanceTrade[]
+  max_drift_pct: number
+  needs_rebalance: boolean
+  rebalance_in_tax_advantaged: number
+  rebalance_notes: string[]
+  suggestions: string[]
+}
+
+export interface RebalanceReportResponse {
+  profile_id: number
+  result: RebalanceReportResult
 }
 
 export interface MonteCarloResponse {

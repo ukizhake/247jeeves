@@ -57,6 +57,19 @@ Combines lifestyle spending paths with guaranteed income and an October-style re
 Code: `engine/withdrawals/spending.py`, `engine/annual_review.py`  
 UI: profile fields + **Run annual review** + **Apply recommended spending**
 
+### Phase 3b — Target allocation & rebalance report (done)
+
+Deck-style **55% stocks / 40% bonds / 5% cash** (five stock classes @ 11% each in the book; modeled as one stock sleeve here).
+
+- **Target mix** on profile (`target_allocation`, default 55/40/5)
+- **Current mix** optional (`current_allocation`); if omitted, cash % inferred from cash accounts, remainder split like target
+- **Drift band** `rebalance_band_pct` (default 2%) — no trades if all sleeves within band
+- **Report**: dollar drift per sleeve, buy/sell trades, prefer **IRA/Roth** (Principle 5 / rule `13_rebalance_tax_advantaged`)
+- API: `POST /api/profiles/{id}/rebalance-report`
+- UI: allocation fields + **Rebalance report** button
+
+Code: `engine/allocation/rebalance.py`, `engine/models/allocation.py`
+
 ### Phase 2d — Richer returns (next)
 
 - 60/40 or equity/bond split with correlation
@@ -153,6 +166,7 @@ Tax stacking: deductions reduce ordinary first; leftover can offset LTCG. Not si
 | API | `api/routes/profiles.py`, `api/routes/import_.py` |
 | UI table | `web/src/components/SimulationTable.tsx` |
 | Strategy compare UI | `web/src/components/StrategyComparison.tsx` |
+| Rebalance report | `engine/allocation/rebalance.py`, `web/src/components/RebalanceReport.tsx` |
 | Fidelity UI | `web/src/components/FidelityImport.tsx` |
 
 ## Run

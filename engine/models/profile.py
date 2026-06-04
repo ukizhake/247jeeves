@@ -4,6 +4,8 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field, field_validator
 from pydantic import ValidationInfo
 
+from engine.models.allocation import AssetAllocation, DEFAULT_TARGET_ALLOCATION
+
 # Generous cap — ~$6,667/mo at age 70 for high earners who delay to 70.
 MAX_SS_ANNUAL_PER_PERSON = 80_000
 MAX_SS_MONTHLY = 6_500
@@ -169,6 +171,20 @@ class Profile(BaseModel):
         ge=0,
         le=1,
         description="Fraction of taxable withdrawal treated as basis (not gain)",
+    )
+    target_allocation: AssetAllocation = Field(
+        default_factory=lambda: DEFAULT_TARGET_ALLOCATION.model_copy(),
+        description="Target portfolio mix (deck default 55/40/5 stocks/bonds/cash)",
+    )
+    current_allocation: Optional[AssetAllocation] = Field(
+        None,
+        description="Actual mix today; if omitted, inferred from cash balance vs target",
+    )
+    rebalance_band_pct: float = Field(
+        0.02,
+        ge=0,
+        le=0.1,
+        description="Skip rebalance trades when every sleeve is within this drift (e.g. 0.02 = 2%)",
     )
 
     @field_validator("social_security_annual_at_claim", "spouse_social_security_annual_at_claim")

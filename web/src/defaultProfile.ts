@@ -26,6 +26,8 @@ export const defaultSingleProfile: Profile = {
   inflation_rate: 0.03,
   withdrawal_scheme: 'performance_cola',
   annual_review_month: 10,
+  target_allocation: { stocks: 0.55, bonds: 0.4, cash: 0.05 },
+  rebalance_band_pct: 0.02,
 }
 
 export const defaultProfile: Profile = {
@@ -61,4 +63,6 @@ export const defaultProfile: Profile = {
   annuity_income_annual: 0,
   annual_review_month: 10,
   performance_skip_cola_after_down_year: true,
+  target_allocation: { stocks: 0.55, bonds: 0.4, cash: 0.05 },
+  rebalance_band_pct: 0.02,
 }

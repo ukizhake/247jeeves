@@ -6,6 +6,7 @@ from api.models_db import ProfileRecord, ScenarioRecord
 from api.schemas import (
     AnnualReviewRequest,
     AnnualReviewResponse,
+    RebalanceReportResponse,
     MonteCarloRequest,
     MonteCarloResponse,
     ProfileCreate,
@@ -17,6 +18,7 @@ from api.schemas import (
     StrategyComparisonResponse,
 )
 from engine import simulate
+from engine.allocation.rebalance import compute_rebalance_report
 from engine.annual_review import compute_annual_review
 from engine.monte_carlo import MonteCarloConfig, run_monte_carlo, run_strategy_comparison
 from engine.models.profile import Profile, ScenarioOverrides
@@ -107,6 +109,19 @@ def monte_carlo_profile(
     config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
     result = run_monte_carlo(profile, scenario, config)
     return MonteCarloResponse(profile_id=profile_id, result=result)
+
+
+@router.post("/{profile_id}/rebalance-report", response_model=RebalanceReportResponse)
+def rebalance_report_profile(
+    profile_id: int,
+    db: Session = Depends(get_db),
+) -> RebalanceReportResponse:
+    record = db.get(ProfileRecord, profile_id)
+    if not record:
+        raise HTTPException(404, "Profile not found")
+    profile = Profile.model_validate_json(record.data_json)
+    result = compute_rebalance_report(profile)
+    return RebalanceReportResponse(profile_id=profile_id, result=result)
 
 
 @router.post("/{profile_id}/annual-review", response_model=AnnualReviewResponse)

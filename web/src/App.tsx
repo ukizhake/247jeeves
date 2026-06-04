@@ -2,12 +2,14 @@ import { useState } from 'react'
 import {
   annualReviewProfile,
   createProfile,
+  rebalanceReportProfile,
   monteCarloProfile,
   simulateProfile,
   strategyCompareProfile,
   updateProfile,
 } from './api/client'
 import { AnnualReview } from './components/AnnualReview'
+import { RebalanceReport } from './components/RebalanceReport'
 import { BalanceChart } from './components/BalanceChart'
 import { MonteCarloChart } from './components/MonteCarloChart'
 import { MonteCarloSummary } from './components/MonteCarloSummary'
@@ -22,6 +24,7 @@ import { defaultProfile, defaultSingleProfile } from './defaultProfile'
 import type {
   AnnualReviewResult,
   MonteCarloResult,
+  RebalanceReportResult,
   Profile,
   ScenarioOverrides,
   SimulationResult,
@@ -40,6 +43,7 @@ function App() {
   const [monteCarloResult, setMonteCarloResult] = useState<MonteCarloResult | null>(null)
   const [strategyCompareResult, setStrategyCompareResult] = useState<StrategyComparisonResult | null>(null)
   const [annualReviewResult, setAnnualReviewResult] = useState<AnnualReviewResult | null>(null)
+  const [rebalanceResult, setRebalanceResult] = useState<RebalanceReportResult | null>(null)
   const [priorYearReturn, setPriorYearReturn] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -85,6 +89,7 @@ function App() {
     setMonteCarloResult(null)
     setStrategyCompareResult(null)
     setAnnualReviewResult(null)
+    setRebalanceResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -115,6 +120,7 @@ function App() {
     setMonteCarloResult(null)
     setStrategyCompareResult(null)
     setAnnualReviewResult(null)
+    setRebalanceResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -146,6 +152,7 @@ function App() {
     setStressResults(null)
     setStrategyCompareResult(null)
     setAnnualReviewResult(null)
+    setRebalanceResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -173,6 +180,32 @@ function App() {
       throw new Error('Prior year return must be a number (e.g. 8 for +8%, or -12 for -12%).')
     }
     return parsed > 1 || parsed < -1 ? parsed / 100 : parsed
+  }
+
+  async function runRebalanceReport() {
+    setLoading(true)
+    setError(null)
+    setStressResults(null)
+    setMonteCarloResult(null)
+    setStrategyCompareResult(null)
+    setAnnualReviewResult(null)
+    setRebalanceResult(null)
+    setResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const id = await ensureProfileId()
+      const report = await rebalanceReportProfile(id)
+      setRebalanceResult(report.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Rebalance report failed')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function runAnnualReview() {
@@ -206,6 +239,7 @@ function App() {
     setStressResults(null)
     setMonteCarloResult(null)
     setAnnualReviewResult(null)
+    setRebalanceResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -230,7 +264,9 @@ function App() {
   return (
     <div className="min-h-screen w-full px-3 py-6 sm:px-4">
       <header className="mx-auto mb-8 max-w-[1600px] border-b border-slate-800 pb-6">
-        <p className="text-sm font-medium text-emerald-400">Phase 3a · COLA, annuity floor & annual review</p>
+        <p className="text-sm font-medium text-emerald-400">
+          Phase 3a–3b · Spending review & 55/40/5 rebalance
+        </p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">outlast.money</h1>
         <p className="mt-2 max-w-2xl text-slate-400">
           Retirement tax intelligence — withdrawal sequencing, Roth conversions, and RMD
@@ -341,6 +377,14 @@ function App() {
             </button>
             <button
               type="button"
+              onClick={runRebalanceReport}
+              disabled={loading}
+              className="rounded-lg border border-sky-700 bg-sky-950/40 px-4 py-2.5 text-sm text-sky-200 hover:bg-sky-900/40 disabled:opacity-50"
+            >
+              {loading ? 'Running…' : 'Rebalance report'}
+            </button>
+            <button
+              type="button"
               onClick={runStrategyCompare}
               disabled={loading}
               className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-200 hover:bg-amber-900/40 disabled:opacity-50"
@@ -365,6 +409,7 @@ function App() {
                 setMonteCarloResult(null)
                 setStrategyCompareResult(null)
                 setAnnualReviewResult(null)
+    setRebalanceResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -381,6 +426,7 @@ function App() {
                 setMonteCarloResult(null)
                 setStrategyCompareResult(null)
                 setAnnualReviewResult(null)
+    setRebalanceResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -397,6 +443,7 @@ function App() {
                 setMonteCarloResult(null)
                 setStrategyCompareResult(null)
                 setAnnualReviewResult(null)
+    setRebalanceResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -405,6 +452,13 @@ function App() {
           </div>
           {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
         </section>
+
+        {rebalanceResult && (
+          <section className="mx-auto w-full max-w-[1600px]">
+            <h2 className="mb-3 text-lg font-semibold">Target allocation & rebalance</h2>
+            <RebalanceReport result={rebalanceResult} />
+          </section>
+        )}
 
         {annualReviewResult && (
           <section className="mx-auto w-full max-w-[1600px]">
@@ -485,7 +539,8 @@ function App() {
           !stressResults &&
           !monteCarloResult &&
           !strategyCompareResult &&
-          !annualReviewResult && (
+          !annualReviewResult &&
+          !rebalanceResult && (
           <p className="mx-auto w-full max-w-[1600px] text-slate-500">
             Enter your balances and run a simulation to see the year-by-year table, recommendations,
             and charts.

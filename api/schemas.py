@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+from engine.allocation.rebalance import RebalanceReport
 from engine.annual_review import AnnualReviewResult
 from engine.import_.fidelity import FidelityImportResult
 from engine.models.profile import Profile, ScenarioOverrides
@@ -66,3 +67,8 @@ class AnnualReviewRequest(BaseModel):
 class AnnualReviewResponse(BaseModel):
     profile_id: int
     result: AnnualReviewResult
+
+
+class RebalanceReportResponse(BaseModel):
+    profile_id: int
+    result: RebalanceReport

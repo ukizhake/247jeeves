@@ -1,4 +1,4 @@
-import type { Profile } from '../types'
+import type { AssetAllocation, Profile } from '../types'
 import { FidelityImport } from './FidelityImport'
 
 interface Props {
@@ -21,6 +21,8 @@ const defaultIncome = {
 }
 
 const MAX_SS_MONTHLY = 6_500
+
+const DEFAULT_TARGET_ALLOC: AssetAllocation = { stocks: 0.55, bonds: 0.4, cash: 0.05 }
 
 function monthlyError(monthly: number, who: string): string | null {
   if (monthly <= 0) return null
@@ -541,6 +543,156 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
           </label>
         </>
       )}
+
+      <p className="sm:col-span-2 text-sm font-medium text-sky-400/90">
+        Target allocation & rebalance (Phase 3b)
+      </p>
+
+      {(() => {
+        const target = profile.target_allocation ?? DEFAULT_TARGET_ALLOC
+        const targetSum = (target.stocks + target.bonds + target.cash) * 100
+        const setTarget = (patch: Partial<AssetAllocation>) =>
+          set({ target_allocation: { ...target, ...patch } })
+        return (
+          <>
+            <label className="block">
+              <span className="text-sm text-slate-400">Target stocks (%)</span>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                value={Math.round(target.stocks * 100)}
+                disabled={disabled}
+                onChange={(e) => setTarget({ stocks: num(e.target.value) / 100 })}
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm text-slate-400">Target bonds (%)</span>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                value={Math.round(target.bonds * 100)}
+                disabled={disabled}
+                onChange={(e) => setTarget({ bonds: num(e.target.value) / 100 })}
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm text-slate-400">Target cash / T-bills (%)</span>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                value={Math.round(target.cash * 100)}
+                disabled={disabled}
+                onChange={(e) => setTarget({ cash: num(e.target.value) / 100 })}
+              />
+            </label>
+            {Math.abs(targetSum - 100) > 0.5 && (
+              <p className="sm:col-span-2 text-xs text-amber-400">
+                Target allocation sums to {targetSum.toFixed(0)}% — adjust to 100% before saving.
+              </p>
+            )}
+          </>
+        )
+      })()}
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Rebalance drift band (%)</span>
+        <input
+          type="number"
+          min={0}
+          max={10}
+          step={0.5}
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={((profile.rebalance_band_pct ?? 0.02) * 100).toFixed(1)}
+          disabled={disabled}
+          onChange={(e) => set({ rebalance_band_pct: num(e.target.value) / 100 })}
+        />
+        <p className="mt-1 text-xs text-slate-500">No trades if every sleeve is within this band (default 2%).</p>
+      </label>
+
+      <label className="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
+        <input
+          type="checkbox"
+          checked={profile.current_allocation != null}
+          disabled={disabled}
+          onChange={(e) => {
+            if (e.target.checked) {
+              set({
+                current_allocation: profile.current_allocation ?? {
+                  ...DEFAULT_TARGET_ALLOC,
+                  stocks: 0.6,
+                  bonds: 0.35,
+                },
+              })
+            } else {
+              set({ current_allocation: null })
+            }
+          }}
+          className="rounded border-slate-600"
+        />
+        I know my current stocks/bonds/cash mix (not inferred from accounts)
+      </label>
+
+      {profile.current_allocation != null &&
+        (() => {
+          const cur = profile.current_allocation
+          const curSum = (cur.stocks + cur.bonds + cur.cash) * 100
+          const setCur = (patch: Partial<AssetAllocation>) =>
+            set({ current_allocation: { ...cur, ...patch } })
+          return (
+            <>
+              <label className="block">
+                <span className="text-sm text-slate-400">Current stocks (%)</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                  value={Math.round(cur.stocks * 100)}
+                  disabled={disabled}
+                  onChange={(e) => setCur({ stocks: num(e.target.value) / 100 })}
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm text-slate-400">Current bonds (%)</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                  value={Math.round(cur.bonds * 100)}
+                  disabled={disabled}
+                  onChange={(e) => setCur({ bonds: num(e.target.value) / 100 })}
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm text-slate-400">Current cash (%)</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                  value={Math.round(cur.cash * 100)}
+                  disabled={disabled}
+                  onChange={(e) => setCur({ cash: num(e.target.value) / 100 })}
+                />
+              </label>
+              {Math.abs(curSum - 100) > 0.5 && (
+                <p className="sm:col-span-2 text-xs text-amber-400">
+                  Current allocation sums to {curSum.toFixed(0)}% — adjust to 100%.
+                </p>
+              )}
+            </>
+          )
+        })()}
 
       <label className="block">
         <span className="text-sm text-slate-400">Expected return (% / yr)</span>

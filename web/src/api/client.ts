@@ -1,6 +1,7 @@
 import type {
   AnnualReviewResponse,
   FidelityImportResult,
+  RebalanceReportResponse,
   MonteCarloResponse,
   Profile,
   ProfileResponse,
@@ -98,6 +99,16 @@ export async function importFidelityCsv(file: File): Promise<FidelityImportResul
   if (!res.ok) throw await apiError(res)
   const data = (await res.json()) as { result: FidelityImportResult }
   return data.result
+}
+
+export async function rebalanceReportProfile(profileId: number): Promise<RebalanceReportResponse> {
+  const res = await fetch(`${API}/profiles/${profileId}/rebalance-report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  })
+  if (!res.ok) throw await apiError(res)
+  return res.json()
 }
 
 export async function annualReviewProfile(
