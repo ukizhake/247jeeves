@@ -85,6 +85,23 @@ def test_annuity_income_with_cola():
     assert annuity_income_year(p, 2) == 24_000 * (1.02**2)
 
 
+def test_fixed_percentage_tracks_wealth():
+    p = _base_profile(
+        withdrawal_scheme=WithdrawalScheme.FIXED_PERCENTAGE.value,
+        initial_withdrawal_rate=0.05,
+    )
+    amount, note = spending_for_year(
+        p,
+        2,
+        base_annual=100_000,
+        prior_spending=50_000,
+        prior_year_return=0.1,
+        wealth_start=2_000_000,
+    )
+    assert amount == 100_000
+    assert "FP" in note
+
+
 def test_simulator_annuity_reduces_withdrawal_need():
     from engine.models.profile import ScenarioOverrides
     from engine.simulator import simulate

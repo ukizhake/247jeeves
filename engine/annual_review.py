@@ -9,6 +9,7 @@ from engine.withdrawals.spending import (
     WithdrawalScheme,
     annuity_income_year,
     cola_rate,
+    effective_withdrawal_rate,
     spending_for_year,
 )
 
@@ -69,14 +70,20 @@ def compute_annual_review(
     year_index=0 uses profile.annual_spending as the current baseline.
     """
     current = profile.annual_spending
-    recommended, perf_note = spending_for_year(
-        profile,
-        year_index + 1,
-        base_annual=current,
-        prior_spending=current,
-        prior_year_return=prior_year_return,
-    )
     wealth = total_wealth(profile)
+    if profile.withdrawal_scheme == WithdrawalScheme.FIXED_PERCENTAGE.value:
+        iwr = effective_withdrawal_rate(profile, wealth=wealth, base_annual=current)
+        recommended = wealth * iwr
+        perf_note = f"FP next year: {iwr * 100:.2f}% of portfolio (${wealth:,.0f})"
+    else:
+        recommended, perf_note = spending_for_year(
+            profile,
+            year_index + 1,
+            base_annual=current,
+            prior_spending=current,
+            prior_year_return=prior_year_return,
+            wealth_start=wealth,
+        )
     annuity = annuity_income_year(profile, year_index + 1)
     port_inc = portfolio_income_year0(profile)
     port_wd = max(0.0, recommended - port_inc - annuity)
@@ -92,6 +99,10 @@ def compute_annual_review(
     elif profile.withdrawal_scheme == WithdrawalScheme.FIXED_ANNUITY.value:
         suggestions.append(
             "Fixed annuity scheme: keep the same nominal spending; does not adjust for inflation."
+        )
+    elif profile.withdrawal_scheme == WithdrawalScheme.FIXED_PERCENTAGE.value:
+        suggestions.append(
+            "Fixed % scheme: spending rises and falls with portfolio value — volatile income, capital preservation."
         )
     if annuity > 0:
         suggestions.append(

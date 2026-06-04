@@ -132,6 +132,14 @@ def _withdrawal_policy(scenario: ScenarioOverrides) -> WithdrawalPolicy:
         return WithdrawalPolicy.PHASE_DEFAULT
 
 
+def _profile_for_scenario(profile: Profile, scenario: ScenarioOverrides) -> Profile:
+    if scenario.spending_scheme_override is not None:
+        return profile.model_copy(
+            update={"withdrawal_scheme": scenario.spending_scheme_override}
+        )
+    return profile
+
+
 def simulate(
     profile: Profile,
     scenario: ScenarioOverrides | None = None,
@@ -140,6 +148,7 @@ def simulate(
     run_recommendations: bool = True,
 ) -> SimulationResult:
     scenario = scenario or ScenarioOverrides()
+    profile = _profile_for_scenario(profile, scenario)
     horizon = projection_horizon_years(profile, scenario)
     spending_base = scenario.spending_override or profile.annual_spending
     primary_claim_age = (
@@ -178,15 +187,16 @@ def simulate(
             else resolve_return_rate(profile, scenario, i)
         )
 
+        wealth_start = trad + roth + taxable + cash
         spending_target, spending_note = spending_for_year(
             profile,
             i,
             base_annual=spending_base,
             prior_spending=prior_spending,
             prior_year_return=prior_year_return,
+            wealth_start=wealth_start,
         )
         annuity_income = annuity_income_year(profile, i)
-        wealth_start = trad + roth + taxable + cash
 
         trad *= 1 + year_return
         roth *= 1 + year_return
@@ -376,6 +386,8 @@ def simulate(
             "horizon_years": horizon,
             "return_scenario": scenario.return_scenario,
             "net_portfolio_income": scenario.net_portfolio_income,
+            "withdrawal_scheme": profile.withdrawal_scheme,
+            "withdrawal_policy": scenario.withdrawal_policy,
         },
     )
     result.recommendations = run_rules(profile, scenario, result) if run_recommendations else []

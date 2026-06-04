@@ -70,6 +70,24 @@ Deck-style **55% stocks / 40% bonds / 5% cash** (five stock classes @ 11% each i
 
 Code: `engine/allocation/rebalance.py`, `engine/models/allocation.py`
 
+### Phase 3c — Spending schemes everywhere (done)
+
+All deck-style **spending** paths on the simulator, annual review, Monte Carlo, and UI:
+
+| Scheme | Behavior |
+|--------|----------|
+| `cola` | Year-one spend × inflation each year |
+| `fixed_annuity` | Same nominal spending (FA) |
+| `performance_cola` | COLA with hold-flat after down year (default) |
+| `fixed_percentage` | `initial_withdrawal_rate` × start-of-year wealth (FP) |
+
+- **Scenario override**: `spending_scheme_override` on `ScenarioOverrides` for one-off runs
+- **Compare**: `POST /api/profiles/{id}/spending-compare` — same MC paths, four schemes (success, wealth, lifetime spending, tax)
+- **Account order** (Phase 2c) renamed in UI to “Compare account withdrawal order” vs spending schemes
+- Year table: **Spend rule** column when notes present; simulation badge shows active scheme
+
+Code: `engine/withdrawals/spending.py`, `run_spending_scheme_comparison` in `engine/monte_carlo.py`
+
 ### Phase 2d — Richer returns (next)
 
 - 60/40 or equity/bond split with correlation

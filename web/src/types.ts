@@ -1,6 +1,10 @@
 export type FilingStatus = 'single' | 'mfj'
 
-export type WithdrawalScheme = 'cola' | 'fixed_annuity' | 'performance_cola'
+export type WithdrawalScheme =
+  | 'cola'
+  | 'fixed_annuity'
+  | 'performance_cola'
+  | 'fixed_percentage'
 
 export interface AssetAllocation {
   stocks: number
@@ -43,6 +47,7 @@ export interface Profile {
   return_volatility?: number
   inflation_rate: number
   withdrawal_scheme?: WithdrawalScheme
+  initial_withdrawal_rate?: number
   spending_cola_rate?: number | null
   annuity_income_annual?: number
   annuity_cola_rate?: number | null
@@ -65,6 +70,7 @@ export interface ScenarioOverrides {
   return_scenario?: 'base' | 'bad_early' | 'flat_low'
   net_portfolio_income?: boolean
   withdrawal_policy?: 'phase_default' | 'taxable_first' | 'cash_first' | 'ira_first'
+  spending_scheme_override?: WithdrawalScheme | null
 }
 
 export interface YearState {
@@ -190,6 +196,31 @@ export interface StrategyComparisonResult {
 export interface StrategyComparisonResponse {
   profile_id: number
   result: StrategyComparisonResult
+}
+
+export interface SpendingSchemeSummary {
+  scheme: string
+  label: string
+  success_rate: number
+  median_final_wealth: number
+  p10_final_wealth: number
+  p90_final_wealth: number
+  median_lifetime_spending: number
+  median_lifetime_tax: number
+}
+
+export interface SpendingSchemeComparisonResult {
+  num_paths: number
+  seed: number | null
+  mean_return: number
+  return_volatility: number
+  schemes: SpendingSchemeSummary[]
+  meta?: Record<string, string | number | boolean | null>
+}
+
+export interface SpendingSchemeComparisonResponse {
+  profile_id: number
+  result: SpendingSchemeComparisonResult
 }
 
 export interface AnnualReviewResult {

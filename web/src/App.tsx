@@ -5,6 +5,7 @@ import {
   rebalanceReportProfile,
   monteCarloProfile,
   simulateProfile,
+  spendingCompareProfile,
   strategyCompareProfile,
   updateProfile,
 } from './api/client'
@@ -17,9 +18,11 @@ import { ProfileForm, validateProfileSocialSecurity } from './components/Profile
 import { Recommendations } from './components/Recommendations'
 import { SimulationTable } from './components/SimulationTable'
 import { StressComparison } from './components/StressComparison'
+import { SpendingSchemeComparison } from './components/SpendingSchemeComparison'
 import { StrategyComparison } from './components/StrategyComparison'
 import { SummaryCards } from './components/SummaryCards'
 import { RETURN_SCENARIOS, type ReturnScenarioId } from './constants/returnScenarios'
+import { SPENDING_SCHEME_OPTIONS, spendingSchemeLabel } from './constants/spendingSchemes'
 import { defaultProfile, defaultSingleProfile } from './defaultProfile'
 import type {
   AnnualReviewResult,
@@ -28,7 +31,9 @@ import type {
   Profile,
   ScenarioOverrides,
   SimulationResult,
+  SpendingSchemeComparisonResult,
   StrategyComparisonResult,
+  WithdrawalScheme,
 } from './types'
 
 function scenarioLabel(id: ReturnScenarioId): string {
@@ -44,12 +49,15 @@ function App() {
   const [strategyCompareResult, setStrategyCompareResult] = useState<StrategyComparisonResult | null>(null)
   const [annualReviewResult, setAnnualReviewResult] = useState<AnnualReviewResult | null>(null)
   const [rebalanceResult, setRebalanceResult] = useState<RebalanceReportResult | null>(null)
+  const [spendingCompareResult, setSpendingCompareResult] =
+    useState<SpendingSchemeComparisonResult | null>(null)
   const [priorYearReturn, setPriorYearReturn] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rothOverride, setRothOverride] = useState<string>('')
   const [returnScenario, setReturnScenario] = useState<ReturnScenarioId>('base')
   const [netPortfolioIncome, setNetPortfolioIncome] = useState(true)
+  const [spendingScenarioOverride, setSpendingScenarioOverride] = useState<WithdrawalScheme | ''>('')
 
   function buildScenarioOverrides(name: string, scenarioId: ReturnScenarioId): ScenarioOverrides {
     const rothTrimmed = rothOverride.trim()
@@ -67,6 +75,7 @@ function App() {
       target_bracket_rate: 0.22,
       return_scenario: scenarioId,
       net_portfolio_income: netPortfolioIncome,
+      spending_scheme_override: spendingScenarioOverride === '' ? null : spendingScenarioOverride,
     }
   }
 
@@ -90,6 +99,7 @@ function App() {
     setStrategyCompareResult(null)
     setAnnualReviewResult(null)
     setRebalanceResult(null)
+    setSpendingCompareResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -121,6 +131,7 @@ function App() {
     setStrategyCompareResult(null)
     setAnnualReviewResult(null)
     setRebalanceResult(null)
+    setSpendingCompareResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -153,6 +164,7 @@ function App() {
     setStrategyCompareResult(null)
     setAnnualReviewResult(null)
     setRebalanceResult(null)
+    setSpendingCompareResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -190,6 +202,7 @@ function App() {
     setStrategyCompareResult(null)
     setAnnualReviewResult(null)
     setRebalanceResult(null)
+    setSpendingCompareResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -233,6 +246,34 @@ function App() {
     }
   }
 
+  async function runSpendingCompare() {
+    setLoading(true)
+    setError(null)
+    setStressResults(null)
+    setMonteCarloResult(null)
+    setStrategyCompareResult(null)
+    setAnnualReviewResult(null)
+    setRebalanceResult(null)
+    setSpendingCompareResult(null)
+    setResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const id = await ensureProfileId()
+      const scenario = buildScenarioOverrides('Spending compare', 'base')
+      const cmp = await spendingCompareProfile(id, { scenario, num_paths: 500 })
+      setSpendingCompareResult(cmp.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Spending scheme comparison failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function runStrategyCompare() {
     setLoading(true)
     setError(null)
@@ -240,6 +281,7 @@ function App() {
     setMonteCarloResult(null)
     setAnnualReviewResult(null)
     setRebalanceResult(null)
+    setSpendingCompareResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -265,7 +307,7 @@ function App() {
     <div className="min-h-screen w-full px-3 py-6 sm:px-4">
       <header className="mx-auto mb-8 max-w-[1600px] border-b border-slate-800 pb-6">
         <p className="text-sm font-medium text-emerald-400">
-          Phase 3a–3b · Spending review & 55/40/5 rebalance
+          Phase 3c · Spending schemes, review & rebalance
         </p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">outlast.money</h1>
         <p className="mt-2 max-w-2xl text-slate-400">
@@ -309,6 +351,23 @@ function App() {
                 disabled={loading}
                 onChange={(e) => setRothOverride(e.target.value)}
               />
+            </label>
+            <label className="block sm:col-span-2">
+              <span className="text-sm text-slate-400">Spending scheme for this run (optional)</span>
+              <select
+                className="mt-1 w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+                value={spendingScenarioOverride}
+                disabled={loading}
+                onChange={(e) =>
+                  setSpendingScenarioOverride(e.target.value as WithdrawalScheme | '')
+                }
+              >
+                {SPENDING_SCHEME_OPTIONS.map((s) => (
+                  <option key={s.id || 'default'} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 
@@ -385,11 +444,19 @@ function App() {
             </button>
             <button
               type="button"
+              onClick={runSpendingCompare}
+              disabled={loading}
+              className="rounded-lg border border-violet-700 bg-violet-950/40 px-4 py-2.5 text-sm text-violet-200 hover:bg-violet-900/40 disabled:opacity-50"
+            >
+              {loading ? 'Running…' : 'Compare spending schemes'}
+            </button>
+            <button
+              type="button"
               onClick={runStrategyCompare}
               disabled={loading}
               className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-200 hover:bg-amber-900/40 disabled:opacity-50"
             >
-              {loading ? 'Running…' : 'Compare withdrawal strategies'}
+              {loading ? 'Running…' : 'Compare account withdrawal order'}
             </button>
             <button
               type="button"
@@ -410,6 +477,7 @@ function App() {
                 setStrategyCompareResult(null)
                 setAnnualReviewResult(null)
     setRebalanceResult(null)
+    setSpendingCompareResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -427,6 +495,7 @@ function App() {
                 setStrategyCompareResult(null)
                 setAnnualReviewResult(null)
     setRebalanceResult(null)
+    setSpendingCompareResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -444,6 +513,7 @@ function App() {
                 setStrategyCompareResult(null)
                 setAnnualReviewResult(null)
     setRebalanceResult(null)
+    setSpendingCompareResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -473,9 +543,16 @@ function App() {
           </section>
         )}
 
+        {spendingCompareResult && (
+          <section className="mx-auto w-full max-w-[1600px]">
+            <h2 className="mb-3 text-lg font-semibold">Spending scheme comparison</h2>
+            <SpendingSchemeComparison result={spendingCompareResult} />
+          </section>
+        )}
+
         {strategyCompareResult && (
           <section className="mx-auto w-full max-w-[1600px]">
-            <h2 className="mb-3 text-lg font-semibold">Withdrawal strategy comparison</h2>
+            <h2 className="mb-3 text-lg font-semibold">Account withdrawal order comparison</h2>
             <StrategyComparison result={strategyCompareResult} />
           </section>
         )}
@@ -514,6 +591,11 @@ function App() {
                     Market: {String(result.meta.return_scenario).replace(/_/g, ' ')}
                   </span>
                 )}
+                {result.meta?.withdrawal_scheme && (
+                  <span className="rounded-full bg-violet-950 px-3 py-1 text-sm text-violet-200">
+                    Spend: {spendingSchemeLabel(String(result.meta.withdrawal_scheme))}
+                  </span>
+                )}
               </div>
               <SimulationTable years={result.years} />
             </section>
@@ -540,7 +622,8 @@ function App() {
           !monteCarloResult &&
           !strategyCompareResult &&
           !annualReviewResult &&
-          !rebalanceResult && (
+          !rebalanceResult &&
+          !spendingCompareResult && (
           <p className="mx-auto w-full max-w-[1600px] text-slate-500">
             Enter your balances and run a simulation to see the year-by-year table, recommendations,
             and charts.

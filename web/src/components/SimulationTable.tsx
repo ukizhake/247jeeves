@@ -33,9 +33,15 @@ export function SimulationTable({ years }: { years: YearState[] }) {
   )
   const showAnnuity = years.some((y) => (y.annuity_income ?? 0) > 0)
   const showIwr = years.some((y) => (y.implied_withdrawal_rate ?? 0) > 0.001)
+  const showSpendNote = years.some((y) => (y.spending_adjustment_note ?? '').length > 0)
 
   const portfolioCols =
-    (showSpouseSs ? 7 : 6) + 3 + (showAnnuity ? 1 : 0) + (showIwr ? 1 : 0) + (showNonBaseReturn ? 1 : 0)
+    (showSpouseSs ? 7 : 6) +
+    3 +
+    (showAnnuity ? 1 : 0) +
+    (showIwr ? 1 : 0) +
+    (showSpendNote ? 1 : 0) +
+    (showNonBaseReturn ? 1 : 0)
   const taxBreakdownCols = showWdBasis ? 9 : 7
 
   return (
@@ -102,6 +108,11 @@ export function SimulationTable({ years }: { years: YearState[] }) {
             {showIwr && (
               <th className={num} title="Portfolio withdrawal need ÷ wealth at start of year">
                 IWR
+              </th>
+            )}
+            {showSpendNote && (
+              <th className={lbl} title="COLA, performance, or FP spending rule applied">
+                Spend rule
               </th>
             )}
             {showNonBaseReturn && (
@@ -177,6 +188,11 @@ export function SimulationTable({ years }: { years: YearState[] }) {
                   {y.implied_withdrawal_rate != null && y.implied_withdrawal_rate > 0
                     ? `${(y.implied_withdrawal_rate * 100).toFixed(1)}%`
                     : '—'}
+                </td>
+              )}
+              {showSpendNote && (
+                <td className="max-w-[12rem] truncate px-2 py-1.5 text-xs text-slate-500" title={y.spending_adjustment_note}>
+                  {y.spending_adjustment_note || '—'}
                 </td>
               )}
               {showNonBaseReturn && (

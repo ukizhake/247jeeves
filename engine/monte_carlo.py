@@ -9,11 +9,14 @@ from engine.models.profile import Profile, ScenarioOverrides
 from engine.models.simulation import (
     MonteCarloResult,
     MonteCarloYearBand,
+    SpendingSchemeComparisonResult,
+    SpendingSchemeSummary,
     StrategyComparisonResult,
     StrategySummary,
 )
 from engine.simulator import projection_horizon_years, simulate
 from engine.withdrawals.policy import POLICY_LABELS, WithdrawalPolicy
+from engine.withdrawals.spending import COMPARISON_SCHEMES, SCHEME_LABELS, WithdrawalScheme
 
 
 def _percentile(sorted_vals: list[float], pct: float) -> float:
@@ -146,6 +149,89 @@ def run_monte_carlo(
         meta={
             "horizon_years": horizon,
             "seed": config.seed,
+            "net_portfolio_income": scenario.net_portfolio_income,
+            "withdrawal_policy": scenario.withdrawal_policy,
+            "withdrawal_scheme": profile.withdrawal_scheme,
+        },
+    )
+
+
+def _lifetime_spending(result) -> float:
+    return sum(y.spending_target for y in result.years)
+
+
+def run_spending_scheme_comparison(
+    profile: Profile,
+    scenario: ScenarioOverrides | None = None,
+    config: MonteCarloConfig | None = None,
+    *,
+    schemes: tuple[WithdrawalScheme, ...] | None = None,
+) -> SpendingSchemeComparisonResult:
+    """Compare COLA / FA / performance / FP spending on shared Monte Carlo paths (Phase 3c)."""
+    scenario = scenario or ScenarioOverrides()
+    config = config or MonteCarloConfig()
+    compare_schemes = schemes or COMPARISON_SCHEMES
+    horizon = projection_horizon_years(profile, scenario)
+    mean = config.mean_return if config.mean_return is not None else profile.return_rate
+    vol = (
+        config.return_volatility
+        if config.return_volatility is not None
+        else profile.return_volatility
+    )
+
+    return_paths = generate_return_paths(mean, vol, horizon, config.num_paths, config.seed)
+    summaries: list[SpendingSchemeSummary] = []
+
+    for scheme in compare_schemes:
+        mc_scenario = scenario.model_copy(
+            update={
+                "return_scenario": "base",
+                "name": f"Spending {scheme.value}",
+                "spending_scheme_override": scheme.value,
+            }
+        )
+        final_wealths: list[float] = []
+        lifetime_spending: list[float] = []
+        lifetime_taxes: list[float] = []
+        successes = 0
+
+        for rates in return_paths:
+            result = simulate(
+                profile,
+                mc_scenario,
+                return_rates=rates,
+                run_recommendations=False,
+            )
+            if _plan_succeeded(result):
+                successes += 1
+            final_wealths.append(_total_wealth(result))
+            lifetime_spending.append(_lifetime_spending(result))
+            lifetime_taxes.append(result.summary.lifetime_federal_tax)
+
+        wealth_sorted = sorted(final_wealths)
+        spend_sorted = sorted(lifetime_spending)
+        tax_sorted = sorted(lifetime_taxes)
+        summaries.append(
+            SpendingSchemeSummary(
+                scheme=scheme.value,
+                label=SCHEME_LABELS[scheme],
+                success_rate=round(successes / config.num_paths, 4) if config.num_paths else 0.0,
+                median_final_wealth=round(_percentile(wealth_sorted, 0.50), 2),
+                p10_final_wealth=round(_percentile(wealth_sorted, 0.10), 2),
+                p90_final_wealth=round(_percentile(wealth_sorted, 0.90), 2),
+                median_lifetime_spending=round(_percentile(spend_sorted, 0.50), 2),
+                median_lifetime_tax=round(_percentile(tax_sorted, 0.50), 2),
+            )
+        )
+
+    return SpendingSchemeComparisonResult(
+        num_paths=config.num_paths,
+        seed=config.seed,
+        mean_return=mean,
+        return_volatility=vol,
+        schemes=summaries,
+        meta={
+            "horizon_years": horizon,
             "net_portfolio_income": scenario.net_portfolio_income,
             "withdrawal_policy": scenario.withdrawal_policy,
         },

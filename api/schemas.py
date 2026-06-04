@@ -4,7 +4,12 @@ from engine.allocation.rebalance import RebalanceReport
 from engine.annual_review import AnnualReviewResult
 from engine.import_.fidelity import FidelityImportResult
 from engine.models.profile import Profile, ScenarioOverrides
-from engine.models.simulation import MonteCarloResult, SimulationResult, StrategyComparisonResult
+from engine.models.simulation import (
+    MonteCarloResult,
+    SimulationResult,
+    SpendingSchemeComparisonResult,
+    StrategyComparisonResult,
+)
 
 
 class MonteCarloRequest(BaseModel):
@@ -72,3 +77,8 @@ class AnnualReviewResponse(BaseModel):
 class RebalanceReportResponse(BaseModel):
     profile_id: int
     result: RebalanceReport
+
+
+class SpendingSchemeComparisonResponse(BaseModel):
+    profile_id: int
+    result: SpendingSchemeComparisonResult

@@ -7,6 +7,7 @@ import type {
   ProfileResponse,
   ScenarioOverrides,
   SimulateResponse,
+  SpendingSchemeComparisonResponse,
   StrategyComparisonResponse,
 } from '../types'
 
@@ -120,6 +121,23 @@ export async function annualReviewProfile(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       prior_year_return: priorYearReturn ?? null,
+    }),
+  })
+  if (!res.ok) throw await apiError(res)
+  return res.json()
+}
+
+export async function spendingCompareProfile(
+  profileId: number,
+  options?: { scenario?: ScenarioOverrides; num_paths?: number; seed?: number },
+): Promise<SpendingSchemeComparisonResponse> {
+  const res = await fetch(`${API}/profiles/${profileId}/spending-compare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      scenario: options?.scenario ?? null,
+      num_paths: options?.num_paths ?? 500,
+      seed: options?.seed ?? null,
     }),
   })
   if (!res.ok) throw await apiError(res)

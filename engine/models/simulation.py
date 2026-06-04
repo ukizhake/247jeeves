@@ -135,3 +135,23 @@ class StrategyComparisonResult(BaseModel):
     return_volatility: float
     strategies: list[StrategySummary]
     meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class SpendingSchemeSummary(BaseModel):
+    scheme: str
+    label: str
+    success_rate: float
+    median_final_wealth: float
+    p10_final_wealth: float
+    p90_final_wealth: float
+    median_lifetime_spending: float
+    median_lifetime_tax: float
+
+
+class SpendingSchemeComparisonResult(BaseModel):
+    num_paths: int
+    seed: int | None
+    mean_return: float
+    return_volatility: float
+    schemes: list[SpendingSchemeSummary]
+    meta: dict[str, Any] = Field(default_factory=dict)

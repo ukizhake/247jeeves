@@ -410,8 +410,28 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
           <option value="performance_cola">Performance COLA (hold after down year)</option>
           <option value="cola">COLA every year</option>
           <option value="fixed_annuity">Fixed nominal (book FA)</option>
+          <option value="fixed_percentage">Fixed % of portfolio (FP)</option>
         </select>
       </label>
+
+      {(profile.withdrawal_scheme ?? 'performance_cola') === 'fixed_percentage' && (
+        <label className="block">
+          <span className="text-sm text-slate-400">Initial withdrawal rate (% of portfolio)</span>
+          <input
+            type="number"
+            min={2}
+            max={20}
+            step={0.1}
+            className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+            value={((profile.initial_withdrawal_rate ?? 0.047) * 100).toFixed(1)}
+            disabled={disabled}
+            onChange={(e) => set({ initial_withdrawal_rate: num(e.target.value) / 100 })}
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            Deck reference ~4.7% on 55/40/5; spending moves with portfolio each year.
+          </p>
+        </label>
+      )}
 
       <label className="block">
         <span className="text-sm text-slate-400">Annual review month</span>

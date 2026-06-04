@@ -11,6 +11,30 @@ class WithdrawalScheme(str, Enum):
     COLA = "cola"
     FIXED_ANNUITY = "fixed_annuity"
     PERFORMANCE_COLA = "performance_cola"
+    FIXED_PERCENTAGE = "fixed_percentage"
+
+
+SCHEME_LABELS: dict[WithdrawalScheme, str] = {
+    WithdrawalScheme.COLA: "COLA (inflation-adjusted lifestyle)",
+    WithdrawalScheme.FIXED_ANNUITY: "Fixed annuity (nominal spending)",
+    WithdrawalScheme.PERFORMANCE_COLA: "Performance COLA (hold after down year)",
+    WithdrawalScheme.FIXED_PERCENTAGE: "Fixed % of portfolio (FP)",
+}
+
+COMPARISON_SCHEMES: tuple[WithdrawalScheme, ...] = (
+    WithdrawalScheme.COLA,
+    WithdrawalScheme.FIXED_ANNUITY,
+    WithdrawalScheme.PERFORMANCE_COLA,
+    WithdrawalScheme.FIXED_PERCENTAGE,
+)
+
+
+def effective_withdrawal_rate(profile: Profile, *, wealth: float, base_annual: float) -> float:
+    if profile.initial_withdrawal_rate > 0:
+        return profile.initial_withdrawal_rate
+    if wealth > 0 and base_annual > 0:
+        return base_annual / wealth
+    return 0.047
 
 
 def cola_rate(profile: Profile) -> float:
@@ -34,6 +58,7 @@ def spending_for_year(
     base_annual: float,
     prior_spending: float,
     prior_year_return: float | None,
+    wealth_start: float = 0.0,
 ) -> tuple[float, str]:
     """
     Compute inflation-adjusted or scheme-specific spending for a projection year.
@@ -41,6 +66,14 @@ def spending_for_year(
     """
     scheme = WithdrawalScheme(profile.withdrawal_scheme)
     rate = cola_rate(profile)
+
+    if scheme == WithdrawalScheme.FIXED_PERCENTAGE:
+        iwr = effective_withdrawal_rate(profile, wealth=wealth_start, base_annual=base_annual)
+        amount = wealth_start * iwr if wealth_start > 0 else base_annual
+        return (
+            amount,
+            f"FP {iwr * 100:.2f}% of start-of-year wealth (${wealth_start:,.0f})",
+        )
 
     if year_index == 0:
         return base_annual, f"{scheme.value}: year-one spending"

@@ -123,9 +123,20 @@ class Profile(BaseModel):
         description="Annual return std dev for Monte Carlo (e.g. 0.15 = 15%)",
     )
     inflation_rate: float = Field(0.03, ge=0, le=0.1)
-    withdrawal_scheme: Literal["cola", "fixed_annuity", "performance_cola"] = Field(
+    withdrawal_scheme: Literal[
+        "cola",
+        "fixed_annuity",
         "performance_cola",
-        description="COLA lifestyle, fixed nominal (FA), or COLA + performance guards",
+        "fixed_percentage",
+    ] = Field(
+        "performance_cola",
+        description="COLA, fixed nominal (FA), performance COLA, or fixed % of portfolio (FP)",
+    )
+    initial_withdrawal_rate: float = Field(
+        0.047,
+        ge=0.02,
+        le=0.2,
+        description="FP scheme: annual spending as fraction of start-of-year wealth (e.g. 0.047 = 4.7%)",
     )
     spending_cola_rate: Optional[float] = Field(
         None,
@@ -236,4 +247,10 @@ class ScenarioOverrides(BaseModel):
     ] = Field(
         "phase_default",
         description="Withdrawal order for supplemental spending (Phase 2c)",
+    )
+    spending_scheme_override: Optional[
+        Literal["cola", "fixed_annuity", "performance_cola", "fixed_percentage"]
+    ] = Field(
+        None,
+        description="Override profile withdrawal_scheme for this scenario run (Phase 3c)",
     )
