@@ -24,6 +24,8 @@ export const defaultSingleProfile: Profile = {
   return_rate: 0.06,
   return_volatility: 0.15,
   inflation_rate: 0.03,
+  withdrawal_scheme: 'performance_cola',
+  annual_review_month: 10,
 }
 
 export const defaultProfile: Profile = {
@@ -55,4 +57,8 @@ export const defaultProfile: Profile = {
   return_rate: 0.06,
   return_volatility: 0.15,
   inflation_rate: 0.03,
+  withdrawal_scheme: 'performance_cola',
+  annuity_income_annual: 0,
+  annual_review_month: 10,
+  performance_skip_cola_after_down_year: true,
 }

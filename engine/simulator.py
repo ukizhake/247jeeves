@@ -12,6 +12,8 @@ from engine.models.simulation import SimulationResult, SimulationSummary, YearSt
 from engine.phases.detect import RetirementPhase, detect_phase
 from engine.returns.scenarios import resolve_return_rate
 from engine.rules.runner import run_rules
+from engine.withdrawals.policy import WithdrawalPolicy, fund_spending
+from engine.withdrawals.spending import annuity_income_year, spending_for_year
 
 
 def _inflation_factor(profile: Profile, year_index: int) -> float:
@@ -123,71 +125,11 @@ def projection_horizon_years(profile: Profile, scenario: ScenarioOverrides) -> i
     return max(1, end_age - profile.age + 1)
 
 
-def _fund_spending(
-    phase: str,
-    remaining_need: float,
-    trad: float,
-    taxable: float,
-    roth: float,
-    cash: float,
-) -> tuple[float, float, float, float, float, float, float, float]:
-    """
-    Phase-aware withdrawal sequence (Richer Retirement slides 35, 40–41).
-    Returns updated balances and withdrawal amounts.
-    """
-    withdrawal_ira = 0.0
-    withdrawal_taxable = 0.0
-    withdrawal_roth = 0.0
-
-    def take_ira():
-        nonlocal remaining_need, trad, withdrawal_ira
-        if remaining_need <= 0 or trad <= 0:
-            return
-        w = min(trad, remaining_need)
-        withdrawal_ira += w
-        trad -= w
-        remaining_need -= w
-
-    def take_taxable():
-        nonlocal remaining_need, taxable, withdrawal_taxable
-        if remaining_need <= 0 or taxable <= 0:
-            return
-        w = min(taxable, remaining_need)
-        withdrawal_taxable += w
-        taxable -= w
-        remaining_need -= w
-
-    def take_roth():
-        nonlocal remaining_need, roth, withdrawal_roth
-        if remaining_need <= 0 or roth <= 0:
-            return
-        w = min(roth, remaining_need)
-        withdrawal_roth += w
-        roth -= w
-        remaining_need -= w
-
-    if phase == RetirementPhase.EARLY_RETIREMENT.value:
-        # Through 65: primarily taxable brokerage (Ch. 10 / slide 41)
-        take_taxable()
-        take_ira()
-        take_roth()
-    elif phase in (RetirementPhase.GOLDEN_YEARS.value, RetirementPhase.PRE_RMD.value):
-        # 66–74: primarily traditional (Hidden Roth IRA years)
-        take_ira()
-        take_taxable()
-        take_roth()
-    else:
-        # RMD years: mandatory flow already handled; supplement pre-tax then Roth
-        take_ira()
-        take_roth()
-        take_taxable()
-
-    if remaining_need > 0 and cash > 0:
-        w = min(cash, remaining_need)
-        cash -= w
-        remaining_need -= w
-
-    return trad, taxable, roth, cash, withdrawal_ira, withdrawal_taxable, withdrawal_roth, remaining_need
+def _withdrawal_policy(scenario: ScenarioOverrides) -> WithdrawalPolicy:
+    try:
+        return WithdrawalPolicy(scenario.withdrawal_policy)
+    except ValueError:
+        return WithdrawalPolicy.PHASE_DEFAULT
 
 
 def simulate(
@@ -199,7 +141,7 @@ def simulate(
 ) -> SimulationResult:
     scenario = scenario or ScenarioOverrides()
     horizon = projection_horizon_years(profile, scenario)
-    spending_annual = scenario.spending_override or profile.annual_spending
+    spending_base = scenario.spending_override or profile.annual_spending
     primary_claim_age = (
         scenario.social_security_claim_age_override or profile.social_security_claim_age
     )
@@ -214,6 +156,9 @@ def simulate(
     lifetime_tax = 0.0
     calendar_year = profile.projection_start_year
     gain_fraction = 1.0 - profile.taxable_cost_basis_ratio
+    wd_policy = _withdrawal_policy(scenario)
+    prior_spending = spending_base
+    prior_year_return: float | None = None
 
     for i in range(horizon):
         age = profile.age + i
@@ -232,6 +177,16 @@ def simulate(
             if return_rates is not None
             else resolve_return_rate(profile, scenario, i)
         )
+
+        spending_target, spending_note = spending_for_year(
+            profile,
+            i,
+            base_annual=spending_base,
+            prior_spending=prior_spending,
+            prior_year_return=prior_year_return,
+        )
+        annuity_income = annuity_income_year(profile, i)
+        wealth_start = trad + roth + taxable + cash
 
         trad *= 1 + year_return
         roth *= 1 + year_return
@@ -265,13 +220,21 @@ def simulate(
             + portfolio["other_ordinary"]
             + ss_gross
         )
-        spending_target = spending_annual * ((1 + profile.inflation_rate) ** i)
         portfolio_offset = portfolio_income_pre if scenario.net_portfolio_income else 0.0
-        withdrawal_need = max(0.0, spending_target - portfolio_offset - rmd_taken)
+        withdrawal_need = max(
+            0.0, spending_target - portfolio_offset - annuity_income - rmd_taken
+        )
+        implied_iwr = (withdrawal_need / wealth_start) if wealth_start > 0 else 0.0
         remaining_need = withdrawal_need
 
-        trad, taxable, roth, cash, w_ira, w_tax, w_roth, remaining_need = _fund_spending(
-            phase, remaining_need, trad, taxable, roth, cash
+        trad, taxable, roth, cash, w_ira, w_tax, w_roth, remaining_need = fund_spending(
+            phase,
+            remaining_need,
+            trad,
+            taxable,
+            roth,
+            cash,
+            policy=wd_policy,
         )
         withdrawal_ira += w_ira
         withdrawal_taxable += w_tax
@@ -348,6 +311,9 @@ def simulate(
                 pension_income=round(pension_income, 2),
                 portfolio_income=round(portfolio_income_total, 2),
                 spending_target=round(spending_target, 2),
+                annuity_income=round(annuity_income, 2),
+                spending_adjustment_note=spending_note,
+                implied_withdrawal_rate=round(implied_iwr, 4),
                 withdrawal_need=round(withdrawal_need, 2),
                 unfunded_spending=round(unfunded_spending, 2),
                 return_rate_applied=round(year_return, 4),
@@ -378,6 +344,9 @@ def simulate(
                 aca_cliff_warning=aca_warn,
             )
         )
+
+        prior_spending = spending_target
+        prior_year_return = year_return
 
     last = years[-1] if years else None
     age_75 = next((y for y in years if y.age == 75), None)

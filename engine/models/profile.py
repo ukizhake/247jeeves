@@ -121,6 +121,49 @@ class Profile(BaseModel):
         description="Annual return std dev for Monte Carlo (e.g. 0.15 = 15%)",
     )
     inflation_rate: float = Field(0.03, ge=0, le=0.1)
+    withdrawal_scheme: Literal["cola", "fixed_annuity", "performance_cola"] = Field(
+        "performance_cola",
+        description="COLA lifestyle, fixed nominal (FA), or COLA + performance guards",
+    )
+    spending_cola_rate: Optional[float] = Field(
+        None,
+        ge=0,
+        le=0.1,
+        description="Annual spending COLA; defaults to inflation_rate",
+    )
+    annuity_income_annual: float = Field(
+        0,
+        ge=0,
+        description="Guaranteed annual income (SPIA, pension floor, etc.) offsetting portfolio withdrawals",
+    )
+    annuity_cola_rate: Optional[float] = Field(
+        None,
+        ge=0,
+        le=0.1,
+        description="Annual increase on annuity income; None = fixed nominal",
+    )
+    annual_review_month: int = Field(
+        10,
+        ge=1,
+        le=12,
+        description="Month for annual spending review (10 = October)",
+    )
+    performance_skip_cola_after_down_year: bool = Field(
+        True,
+        description="Hold spending flat after a down portfolio year (performance COLA)",
+    )
+    performance_max_raise_pct: Optional[float] = Field(
+        None,
+        ge=0,
+        le=0.5,
+        description="Optional cap on year-over-year spending increase (e.g. 0.10 = 10%)",
+    )
+    performance_max_cut_pct: Optional[float] = Field(
+        None,
+        ge=0,
+        le=0.5,
+        description="Optional cap on year-over-year spending cut",
+    )
     taxable_cost_basis_ratio: float = Field(
         0.8,
         ge=0,
@@ -168,4 +211,13 @@ class ScenarioOverrides(BaseModel):
     target_bracket_rate: float = Field(
         0.22,
         description="Target marginal bracket ceiling for Roth conversions",
+    )
+    withdrawal_policy: Literal[
+        "phase_default",
+        "taxable_first",
+        "cash_first",
+        "ira_first",
+    ] = Field(
+        "phase_default",
+        description="Withdrawal order for supplemental spending (Phase 2c)",
     )

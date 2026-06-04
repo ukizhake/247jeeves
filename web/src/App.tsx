@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import { createProfile, monteCarloProfile, simulateProfile, updateProfile } from './api/client'
+import {
+  annualReviewProfile,
+  createProfile,
+  monteCarloProfile,
+  simulateProfile,
+  strategyCompareProfile,
+  updateProfile,
+} from './api/client'
+import { AnnualReview } from './components/AnnualReview'
 import { BalanceChart } from './components/BalanceChart'
 import { MonteCarloChart } from './components/MonteCarloChart'
 import { MonteCarloSummary } from './components/MonteCarloSummary'
@@ -7,10 +15,18 @@ import { ProfileForm, validateProfileSocialSecurity } from './components/Profile
 import { Recommendations } from './components/Recommendations'
 import { SimulationTable } from './components/SimulationTable'
 import { StressComparison } from './components/StressComparison'
+import { StrategyComparison } from './components/StrategyComparison'
 import { SummaryCards } from './components/SummaryCards'
 import { RETURN_SCENARIOS, type ReturnScenarioId } from './constants/returnScenarios'
 import { defaultProfile, defaultSingleProfile } from './defaultProfile'
-import type { MonteCarloResult, Profile, ScenarioOverrides, SimulationResult } from './types'
+import type {
+  AnnualReviewResult,
+  MonteCarloResult,
+  Profile,
+  ScenarioOverrides,
+  SimulationResult,
+  StrategyComparisonResult,
+} from './types'
 
 function scenarioLabel(id: ReturnScenarioId): string {
   return RETURN_SCENARIOS.find((s) => s.id === id)?.label ?? id
@@ -22,6 +38,9 @@ function App() {
   const [result, setResult] = useState<SimulationResult | null>(null)
   const [stressResults, setStressResults] = useState<SimulationResult[] | null>(null)
   const [monteCarloResult, setMonteCarloResult] = useState<MonteCarloResult | null>(null)
+  const [strategyCompareResult, setStrategyCompareResult] = useState<StrategyComparisonResult | null>(null)
+  const [annualReviewResult, setAnnualReviewResult] = useState<AnnualReviewResult | null>(null)
+  const [priorYearReturn, setPriorYearReturn] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [rothOverride, setRothOverride] = useState<string>('')
@@ -64,6 +83,8 @@ function App() {
     setError(null)
     setStressResults(null)
     setMonteCarloResult(null)
+    setStrategyCompareResult(null)
+    setAnnualReviewResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -92,6 +113,8 @@ function App() {
     setError(null)
     setResult(null)
     setMonteCarloResult(null)
+    setStrategyCompareResult(null)
+    setAnnualReviewResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
       setError(ssError)
@@ -121,6 +144,8 @@ function App() {
     setLoading(true)
     setError(null)
     setStressResults(null)
+    setStrategyCompareResult(null)
+    setAnnualReviewResult(null)
     setResult(null)
     const ssError = validateProfileSocialSecurity(profile)
     if (ssError) {
@@ -140,12 +165,72 @@ function App() {
     }
   }
 
+  function parsePriorYearReturn(): number | null {
+    const trimmed = priorYearReturn.trim()
+    if (trimmed === '') return null
+    const parsed = parseFloat(trimmed)
+    if (!Number.isFinite(parsed)) {
+      throw new Error('Prior year return must be a number (e.g. 8 for +8%, or -12 for -12%).')
+    }
+    return parsed > 1 || parsed < -1 ? parsed / 100 : parsed
+  }
+
+  async function runAnnualReview() {
+    setLoading(true)
+    setError(null)
+    setStressResults(null)
+    setMonteCarloResult(null)
+    setStrategyCompareResult(null)
+    setResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const prior = parsePriorYearReturn()
+      const id = await ensureProfileId()
+      const review = await annualReviewProfile(id, prior)
+      setAnnualReviewResult(review.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Annual review failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function runStrategyCompare() {
+    setLoading(true)
+    setError(null)
+    setStressResults(null)
+    setMonteCarloResult(null)
+    setAnnualReviewResult(null)
+    setResult(null)
+    const ssError = validateProfileSocialSecurity(profile)
+    if (ssError) {
+      setError(ssError)
+      setLoading(false)
+      return
+    }
+    try {
+      const id = await ensureProfileId()
+      const scenario = buildScenarioOverrides('Strategy compare', 'base')
+      const cmp = await strategyCompareProfile(id, { scenario, num_paths: 500 })
+      setStrategyCompareResult(cmp.result)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Strategy comparison failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const phase = result?.years[0]?.phase ?? '—'
 
   return (
     <div className="min-h-screen w-full px-3 py-6 sm:px-4">
       <header className="mx-auto mb-8 max-w-[1600px] border-b border-slate-800 pb-6">
-        <p className="text-sm font-medium text-emerald-400">Phase 2b · Monte Carlo & tax sequencing</p>
+        <p className="text-sm font-medium text-emerald-400">Phase 3a · COLA, annuity floor & annual review</p>
         <h1 className="mt-1 text-3xl font-bold tracking-tight">outlast.money</h1>
         <p className="mt-2 max-w-2xl text-slate-400">
           Retirement tax intelligence — withdrawal sequencing, Roth conversions, and RMD
@@ -202,6 +287,21 @@ function App() {
             Net portfolio income against spending (dividends, rental, SS reduce account withdrawals)
           </label>
 
+          <label className="mt-3 block max-w-md">
+            <span className="text-sm text-slate-400">
+              Prior year portfolio return for annual review (%, optional)
+            </span>
+            <input
+              type="number"
+              step={0.1}
+              placeholder="e.g. 8 or -12 (percent)"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+              value={priorYearReturn}
+              disabled={loading}
+              onChange={(e) => setPriorYearReturn(e.target.value)}
+            />
+          </label>
+
           {result?.summary.first_year_roth_conversion != null && rothOverride.trim() === '' && (
             <p className="mt-1 max-w-xl text-xs text-amber-400/90">
               Year 1 auto Roth conversion:{' '}
@@ -233,6 +333,22 @@ function App() {
             </button>
             <button
               type="button"
+              onClick={runAnnualReview}
+              disabled={loading}
+              className="rounded-lg border border-emerald-700 bg-emerald-950/40 px-4 py-2.5 text-sm text-emerald-200 hover:bg-emerald-900/40 disabled:opacity-50"
+            >
+              {loading ? 'Running…' : 'Run annual review'}
+            </button>
+            <button
+              type="button"
+              onClick={runStrategyCompare}
+              disabled={loading}
+              className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-200 hover:bg-amber-900/40 disabled:opacity-50"
+            >
+              {loading ? 'Running…' : 'Compare withdrawal strategies'}
+            </button>
+            <button
+              type="button"
               onClick={compareStressScenarios}
               disabled={loading}
               className="rounded-lg border border-emerald-700 bg-emerald-950/40 px-4 py-2.5 text-sm text-emerald-200 hover:bg-emerald-900/40 disabled:opacity-50"
@@ -247,6 +363,8 @@ function App() {
                 setResult(null)
                 setStressResults(null)
                 setMonteCarloResult(null)
+                setStrategyCompareResult(null)
+                setAnnualReviewResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -261,6 +379,8 @@ function App() {
                 setResult(null)
                 setStressResults(null)
                 setMonteCarloResult(null)
+                setStrategyCompareResult(null)
+                setAnnualReviewResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -275,6 +395,8 @@ function App() {
                 setResult(null)
                 setStressResults(null)
                 setMonteCarloResult(null)
+                setStrategyCompareResult(null)
+                setAnnualReviewResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -283,6 +405,26 @@ function App() {
           </div>
           {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
         </section>
+
+        {annualReviewResult && (
+          <section className="mx-auto w-full max-w-[1600px]">
+            <h2 className="mb-3 text-lg font-semibold">Annual spending review</h2>
+            <AnnualReview
+              result={annualReviewResult}
+              disabled={loading}
+              onApplyRecommended={() => {
+                setProfile({ ...profile, annual_spending: annualReviewResult.recommended_annual_spending })
+              }}
+            />
+          </section>
+        )}
+
+        {strategyCompareResult && (
+          <section className="mx-auto w-full max-w-[1600px]">
+            <h2 className="mb-3 text-lg font-semibold">Withdrawal strategy comparison</h2>
+            <StrategyComparison result={strategyCompareResult} />
+          </section>
+        )}
 
         {monteCarloResult && (
           <section className="mx-auto w-full max-w-[1600px]">
@@ -339,7 +481,11 @@ function App() {
           </>
         )}
 
-        {!result && !stressResults && !monteCarloResult && (
+        {!result &&
+          !stressResults &&
+          !monteCarloResult &&
+          !strategyCompareResult &&
+          !annualReviewResult && (
           <p className="mx-auto w-full max-w-[1600px] text-slate-500">
             Enter your balances and run a simulation to see the year-by-year table, recommendations,
             and charts.

@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from api.database import get_db
 from api.models_db import ProfileRecord, ScenarioRecord
 from api.schemas import (
+    AnnualReviewRequest,
+    AnnualReviewResponse,
     MonteCarloRequest,
     MonteCarloResponse,
     ProfileCreate,
@@ -12,9 +14,11 @@ from api.schemas import (
     ScenarioResponse,
     SimulateRequest,
     SimulateResponse,
+    StrategyComparisonResponse,
 )
 from engine import simulate
-from engine.monte_carlo import MonteCarloConfig, run_monte_carlo
+from engine.annual_review import compute_annual_review
+from engine.monte_carlo import MonteCarloConfig, run_monte_carlo, run_strategy_comparison
 from engine.models.profile import Profile, ScenarioOverrides
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
@@ -103,6 +107,38 @@ def monte_carlo_profile(
     config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
     result = run_monte_carlo(profile, scenario, config)
     return MonteCarloResponse(profile_id=profile_id, result=result)
+
+
+@router.post("/{profile_id}/annual-review", response_model=AnnualReviewResponse)
+def annual_review_profile(
+    profile_id: int,
+    body: AnnualReviewRequest | None = None,
+    db: Session = Depends(get_db),
+) -> AnnualReviewResponse:
+    record = db.get(ProfileRecord, profile_id)
+    if not record:
+        raise HTTPException(404, "Profile not found")
+    profile = Profile.model_validate_json(record.data_json)
+    body = body or AnnualReviewRequest()
+    result = compute_annual_review(profile, prior_year_return=body.prior_year_return)
+    return AnnualReviewResponse(profile_id=profile_id, result=result)
+
+
+@router.post("/{profile_id}/strategy-compare", response_model=StrategyComparisonResponse)
+def strategy_compare_profile(
+    profile_id: int,
+    body: MonteCarloRequest | None = None,
+    db: Session = Depends(get_db),
+) -> StrategyComparisonResponse:
+    record = db.get(ProfileRecord, profile_id)
+    if not record:
+        raise HTTPException(404, "Profile not found")
+    profile = Profile.model_validate_json(record.data_json)
+    body = body or MonteCarloRequest()
+    scenario = body.scenario if body.scenario else ScenarioOverrides()
+    config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
+    result = run_strategy_comparison(profile, scenario, config)
+    return StrategyComparisonResponse(profile_id=profile_id, result=result)
 
 
 @router.post("/scenarios/{scenario_id}/simulate", response_model=SimulateResponse)

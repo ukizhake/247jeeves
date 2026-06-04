@@ -6,8 +6,14 @@ import random
 from dataclasses import dataclass
 
 from engine.models.profile import Profile, ScenarioOverrides
-from engine.models.simulation import MonteCarloResult, MonteCarloYearBand
+from engine.models.simulation import (
+    MonteCarloResult,
+    MonteCarloYearBand,
+    StrategyComparisonResult,
+    StrategySummary,
+)
 from engine.simulator import projection_horizon_years, simulate
+from engine.withdrawals.policy import POLICY_LABELS, WithdrawalPolicy
 
 
 def _percentile(sorted_vals: list[float], pct: float) -> float:
@@ -46,6 +52,17 @@ def sample_annual_returns(
     return rates
 
 
+def generate_return_paths(
+    mean: float,
+    volatility: float,
+    horizon: int,
+    num_paths: int,
+    seed: int | None,
+) -> list[list[float]]:
+    rng = random.Random(seed)
+    return [sample_annual_returns(mean, volatility, horizon, rng) for _ in range(num_paths)]
+
+
 @dataclass
 class MonteCarloConfig:
     num_paths: int = 500
@@ -54,10 +71,20 @@ class MonteCarloConfig:
     return_volatility: float | None = None
 
 
+COMPARISON_POLICIES: tuple[WithdrawalPolicy, ...] = (
+    WithdrawalPolicy.PHASE_DEFAULT,
+    WithdrawalPolicy.TAXABLE_FIRST,
+    WithdrawalPolicy.CASH_FIRST,
+    WithdrawalPolicy.IRA_FIRST,
+)
+
+
 def run_monte_carlo(
     profile: Profile,
     scenario: ScenarioOverrides | None = None,
     config: MonteCarloConfig | None = None,
+    *,
+    return_paths: list[list[float]] | None = None,
 ) -> MonteCarloResult:
     scenario = scenario or ScenarioOverrides()
     config = config or MonteCarloConfig()
@@ -69,15 +96,15 @@ def run_monte_carlo(
         else profile.return_volatility
     )
 
-    rng = random.Random(config.seed)
-    mc_scenario = scenario.model_copy(update={"return_scenario": "base", "name": "Monte Carlo"})
+    if return_paths is None:
+        return_paths = generate_return_paths(mean, vol, horizon, config.num_paths, config.seed)
 
-    wealth_by_year: list[list[float]] = [[] for _ in range(horizon)]
+    mc_scenario = scenario.model_copy(update={"return_scenario": "base", "name": "Monte Carlo"})
     final_wealths: list[float] = []
+    wealth_by_year: list[list[float]] = [[] for _ in range(horizon)]
     successes = 0
 
-    for _ in range(config.num_paths):
-        rates = sample_annual_returns(mean, vol, horizon, rng)
+    for rates in return_paths:
         result = simulate(
             profile,
             mc_scenario,
@@ -106,9 +133,10 @@ def run_monte_carlo(
             )
         )
 
+    num_paths = len(return_paths)
     return MonteCarloResult(
-        num_paths=config.num_paths,
-        success_rate=round(successes / config.num_paths, 4) if config.num_paths else 0.0,
+        num_paths=num_paths,
+        success_rate=round(successes / num_paths, 4) if num_paths else 0.0,
         median_final_wealth=round(_percentile(final_sorted, 0.50), 2),
         p10_final_wealth=round(_percentile(final_sorted, 0.10), 2),
         p90_final_wealth=round(_percentile(final_sorted, 0.90), 2),
@@ -118,6 +146,80 @@ def run_monte_carlo(
         meta={
             "horizon_years": horizon,
             "seed": config.seed,
+            "net_portfolio_income": scenario.net_portfolio_income,
+            "withdrawal_policy": scenario.withdrawal_policy,
+        },
+    )
+
+
+def run_strategy_comparison(
+    profile: Profile,
+    scenario: ScenarioOverrides | None = None,
+    config: MonteCarloConfig | None = None,
+    *,
+    policies: tuple[WithdrawalPolicy, ...] | None = None,
+) -> StrategyComparisonResult:
+    """Run multiple withdrawal policies on the same random return paths (Phase 2c)."""
+    scenario = scenario or ScenarioOverrides()
+    config = config or MonteCarloConfig()
+    compare_policies = policies or COMPARISON_POLICIES
+    horizon = projection_horizon_years(profile, scenario)
+    mean = config.mean_return if config.mean_return is not None else profile.return_rate
+    vol = (
+        config.return_volatility
+        if config.return_volatility is not None
+        else profile.return_volatility
+    )
+
+    return_paths = generate_return_paths(mean, vol, horizon, config.num_paths, config.seed)
+    strategies: list[StrategySummary] = []
+
+    for policy in compare_policies:
+        mc_scenario = scenario.model_copy(
+            update={
+                "return_scenario": "base",
+                "name": f"Strategy {policy.value}",
+                "withdrawal_policy": policy.value,
+            }
+        )
+        final_wealths: list[float] = []
+        lifetime_taxes: list[float] = []
+        successes = 0
+
+        for rates in return_paths:
+            result = simulate(
+                profile,
+                mc_scenario,
+                return_rates=rates,
+                run_recommendations=False,
+            )
+            if _plan_succeeded(result):
+                successes += 1
+            final_wealths.append(_total_wealth(result))
+            lifetime_taxes.append(result.summary.lifetime_federal_tax)
+
+        final_sorted = sorted(final_wealths)
+        tax_sorted = sorted(lifetime_taxes)
+        strategies.append(
+            StrategySummary(
+                policy=policy.value,
+                label=POLICY_LABELS[policy],
+                success_rate=round(successes / config.num_paths, 4) if config.num_paths else 0.0,
+                median_final_wealth=round(_percentile(final_sorted, 0.50), 2),
+                p10_final_wealth=round(_percentile(final_sorted, 0.10), 2),
+                p90_final_wealth=round(_percentile(final_sorted, 0.90), 2),
+                median_lifetime_tax=round(_percentile(tax_sorted, 0.50), 2),
+            )
+        )
+
+    return StrategyComparisonResult(
+        num_paths=config.num_paths,
+        seed=config.seed,
+        mean_return=mean,
+        return_volatility=vol,
+        strategies=strategies,
+        meta={
+            "horizon_years": horizon,
             "net_portfolio_income": scenario.net_portfolio_income,
         },
     )

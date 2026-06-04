@@ -6,6 +6,80 @@ Engineering decisions and mental model for outlast.money. **No personal portfoli
 
 Local-first retirement tax simulator. Four account buckets only: Traditional IRA, Roth IRA, taxable brokerage, cash. Rules engine recommends tactics from Richer Retirement-style YAML rules. Data stays in local SQLite (`outlast.db`, gitignored).
 
+## Phase roadmap
+
+### Phase 1 — Rules-based simulator (done)
+
+Deterministic year-by-year projection, federal tax stacking, ~45 YAML rules, profile persistence, stress-free fixed 6% returns.
+
+### Phase 2a — Realistic deterministic path (done)
+
+- Net portfolio income: `Wd need = Spend − Portfolio − RMD`
+- Return rate & inflation in UI
+- Stress scenarios: `base`, `bad_early`, `flat_low`
+- Fidelity CSV import → account buckets + cost basis ratio
+
+### Phase 2b — Monte Carlo v1 (done)
+
+- 500 random return paths through the same tax engine
+- Success rate, median / p10 / p90 final wealth, fan chart
+- `return_volatility` on profile (default 15%)
+
+### Phase 2c — Strategy comparison (done)
+
+Same random return paths, multiple **withdrawal policies**:
+
+| Policy | Order |
+|--------|--------|
+| `phase_default` | Early: taxable→IRA→Roth→cash; golden: IRA→taxable→Roth |
+| `taxable_first` | Taxable → IRA → Roth → cash (all phases) |
+| `cash_first` | Cash → taxable → IRA → Roth |
+| `ira_first` | IRA → taxable → Roth → cash (all phases) |
+
+API: `POST /api/profiles/{id}/strategy-compare`  
+UI: **Compare withdrawal strategies** button
+
+### Phase 3a — COLA, annuity floor, annual review (done)
+
+Combines lifestyle spending paths with guaranteed income and an October-style review ritual:
+
+| Scheme | Behavior |
+|--------|----------|
+| `cola` | Prior spend × (1 + COLA rate) every year |
+| `fixed_annuity` | Same nominal spending every year (book FA) |
+| `performance_cola` | COLA unless prior year return &lt; 0 → hold flat; optional raise/cut caps |
+
+- **COLA rate**: `spending_cola_rate` or defaults to `inflation_rate`
+- **Annuity floor**: `annuity_income_annual` (+ optional `annuity_cola_rate`) subtracted from portfolio withdrawals
+- **Annual review**: `annual_review_month` (default **10** = October); `POST /api/profiles/{id}/annual-review` with optional `prior_year_return`
+- Simulator: `Wd need = Spend − Portfolio − Annuity − RMD`; year table shows **Annuity**, **IWR**, spending notes
+
+Code: `engine/withdrawals/spending.py`, `engine/annual_review.py`  
+UI: profile fields + **Run annual review** + **Apply recommended spending**
+
+### Phase 2d — Richer returns (next)
+
+- 60/40 or equity/bond split with correlation
+- Block bootstrap from historical series
+- Legacy floor success criterion (“95% leave ≥ $X at age 90”)
+
+### Phase 2e — Tax optimization solvers (next)
+
+- Roth conversion solver (target bracket)
+- PTC / MAGI band solver (ACA ages 59–64)
+- IRMAA guardrails pre-Medicare
+
+### Phase 2f — Holdings & basis (next)
+
+- Holdings panel from Fidelity import
+- High-basis-first lot sales (rule `08` becomes math)
+
+### Phase 2g — Product polish
+
+- Load / list saved plans in UI
+- Side-by-side Roth scenario compare
+- Export year table to CSV
+
 ## Key design decisions
 
 ### Portfolio vs tax income
@@ -23,15 +97,11 @@ When selling from taxable brokerage, only the **gain** is income — not the ful
 
 ### Net portfolio income (Phase 2a)
 
-When enabled (default on): `withdrawal_need = spending − portfolio_income − RMD`. Spending is covered by passive income first before pulling from accounts.
+When enabled (default on): `withdrawal_need = spending − portfolio_income − annuity_income − RMD`. Spending is covered by passive income and annuity floor first before pulling from accounts.
 
-### Withdrawal order (`engine/simulator.py`)
+### Withdrawal order (`engine/withdrawals/policy.py`)
 
-| Phase | Order |
-|-------|--------|
-| Early retirement (→65) | Taxable → Trad → Roth → Cash |
-| Golden years (66–69) | Trad → Taxable → Roth |
-| RMD years | RMD from Trad first (mandatory) |
+See Phase 2c table above. Configurable via `ScenarioOverrides.withdrawal_policy`.
 
 ### Return scenarios & Monte Carlo
 
@@ -49,7 +119,9 @@ When enabled (default on): `withdrawal_need = spending − portfolio_income − 
 
 | Column | Meaning |
 |--------|---------|
-| **Wd need** | Spend − Portfolio − RMD (net pull from accounts) |
+| **Wd need** | Spend − Portfolio − Annuity − RMD (net pull from accounts) |
+| **Annuity** | Guaranteed floor income offsetting withdrawals |
+| **IWR** | Wd need ÷ wealth at start of year |
 | **Wd basis** | Non-taxable return of principal from taxable sales |
 | **Wd gain** | Taxable capital gain from taxable sales |
 | **Ordinary** | Rental, pension, consulting, non-Q divs, IRA w/d, Roth conv, taxable SS |
@@ -73,20 +145,15 @@ Tax stacking: deductions reduce ordinary first; leftover can offset LTCG. Not si
 | Area | Path |
 |------|------|
 | Simulator | `engine/simulator.py` |
+| Withdrawal policies | `engine/withdrawals/policy.py` |
 | Tax stacking | `engine/calculations/tax.py` |
-| Monte Carlo | `engine/monte_carlo.py` |
+| Monte Carlo + strategy compare | `engine/monte_carlo.py` |
 | Fidelity import | `engine/import_/fidelity.py` |
 | Profile model | `engine/models/profile.py` |
 | API | `api/routes/profiles.py`, `api/routes/import_.py` |
 | UI table | `web/src/components/SimulationTable.tsx` |
+| Strategy compare UI | `web/src/components/StrategyComparison.tsx` |
 | Fidelity UI | `web/src/components/FidelityImport.tsx` |
-
-## Not yet built (ideas from planning)
-
-- Holdings panel / lot-level basis for tax-efficient sales
-- Cash-before-IRA withdrawal ordering option
-- MC: correlated returns, asset-class split, legacy floor success criterion
-- PTC / AGI targeting solver
 
 ## Run
 

@@ -31,8 +31,11 @@ export function SimulationTable({ years }: { years: YearState[] }) {
   const showNonBaseReturn = years.some(
     (y) => y.return_rate_applied != null && Math.abs(y.return_rate_applied - 0.06) > 0.001,
   )
+  const showAnnuity = years.some((y) => (y.annuity_income ?? 0) > 0)
+  const showIwr = years.some((y) => (y.implied_withdrawal_rate ?? 0) > 0.001)
 
-  const portfolioCols = (showSpouseSs ? 7 : 6) + 3 + (showNonBaseReturn ? 1 : 0)
+  const portfolioCols =
+    (showSpouseSs ? 7 : 6) + 3 + (showAnnuity ? 1 : 0) + (showIwr ? 1 : 0) + (showNonBaseReturn ? 1 : 0)
   const taxBreakdownCols = showWdBasis ? 9 : 7
 
   return (
@@ -85,12 +88,22 @@ export function SimulationTable({ years }: { years: YearState[] }) {
             <th className={num} title="Inflation-adjusted lifestyle spending target">
               Spend
             </th>
+            {showAnnuity && (
+              <th className={num} title="Guaranteed annuity / pension floor offsetting withdrawals">
+                Annuity
+              </th>
+            )}
             <th
               className={num}
-              title="Spending minus portfolio income and RMD — amount pulled from accounts"
+              title="Spending minus portfolio income, annuity, and RMD — amount pulled from accounts"
             >
               Wd need
             </th>
+            {showIwr && (
+              <th className={num} title="Portfolio withdrawal need ÷ wealth at start of year">
+                IWR
+              </th>
+            )}
             {showNonBaseReturn && (
               <th className={num} title="Investment return applied this year (stress scenario)">
                 Ret%
@@ -157,7 +170,15 @@ export function SimulationTable({ years }: { years: YearState[] }) {
               <td className={num}>{cell(y.social_security)}</td>
               <td className={`${num} font-medium text-slate-200`}>{money(portfolioIncome(y))}</td>
               <td className={num}>{money(y.spending_target ?? 0)}</td>
+              {showAnnuity && <td className={num}>{cell(y.annuity_income)}</td>}
               <td className={num}>{money(y.withdrawal_need ?? 0)}</td>
+              {showIwr && (
+                <td className={num}>
+                  {y.implied_withdrawal_rate != null && y.implied_withdrawal_rate > 0
+                    ? `${(y.implied_withdrawal_rate * 100).toFixed(1)}%`
+                    : '—'}
+                </td>
+              )}
               {showNonBaseReturn && (
                 <td className={num}>
                   {y.return_rate_applied != null
@@ -195,9 +216,9 @@ export function SimulationTable({ years }: { years: YearState[] }) {
       </table>
       <p className="px-3 py-2 text-xs text-slate-500">
         <strong className="text-slate-400">Portfolio</strong> = passive income (fund, rental, SS, etc.).{' '}
-        <strong className="text-slate-400">Wd need</strong> = Spend − Portfolio − RMD (net withdrawals from
-        accounts). <strong className="text-slate-400">Tax w/d</strong> / Trad w/d show where that need was
-        funded.
+        <strong className="text-slate-400">Wd need</strong> = Spend − Portfolio − Annuity − RMD (net withdrawals
+        from accounts). <strong className="text-slate-400">IWR</strong> = Wd need ÷ start-of-year wealth.{' '}
+        <strong className="text-slate-400">Tax w/d</strong> / Trad w/d show where that need was funded.
       </p>
     </div>
   )

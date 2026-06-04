@@ -389,6 +389,159 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
         />
       </label>
 
+      <p className="sm:col-span-2 text-sm font-medium text-emerald-400/90">
+        Withdrawal & spending path (Phase 3a)
+      </p>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Withdrawal scheme</span>
+        <select
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={profile.withdrawal_scheme ?? 'performance_cola'}
+          disabled={disabled}
+          onChange={(e) =>
+            set({
+              withdrawal_scheme: e.target.value as Profile['withdrawal_scheme'],
+            })
+          }
+        >
+          <option value="performance_cola">Performance COLA (hold after down year)</option>
+          <option value="cola">COLA every year</option>
+          <option value="fixed_annuity">Fixed nominal (book FA)</option>
+        </select>
+      </label>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Annual review month</span>
+        <select
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={profile.annual_review_month ?? 10}
+          disabled={disabled}
+          onChange={(e) => set({ annual_review_month: num(e.target.value) })}
+        >
+          {[
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
+          ].map((name, i) => (
+            <option key={name} value={i + 1}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Spending COLA (% / yr, optional)</span>
+        <input
+          type="number"
+          step={0.1}
+          placeholder={`Default ${(profile.inflation_rate * 100).toFixed(0)}% (inflation)`}
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={
+            profile.spending_cola_rate != null ? profile.spending_cola_rate * 100 : ''
+          }
+          disabled={disabled}
+          onChange={(e) => {
+            const v = e.target.value.trim()
+            set({ spending_cola_rate: v === '' ? null : num(v) / 100 })
+          }}
+        />
+      </label>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Annuity / pension floor ($ / yr)</span>
+        <input
+          type="number"
+          min={0}
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={profile.annuity_income_annual ?? 0}
+          disabled={disabled}
+          onChange={(e) => set({ annuity_income_annual: num(e.target.value) })}
+        />
+        <p className="mt-1 text-xs text-slate-500">Reduces portfolio withdrawals in projections.</p>
+      </label>
+
+      <label className="block">
+        <span className="text-sm text-slate-400">Annuity COLA (% / yr, optional)</span>
+        <input
+          type="number"
+          step={0.1}
+          placeholder="Fixed nominal if blank"
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+          value={profile.annuity_cola_rate != null ? profile.annuity_cola_rate * 100 : ''}
+          disabled={disabled}
+          onChange={(e) => {
+            const v = e.target.value.trim()
+            set({ annuity_cola_rate: v === '' ? null : num(v) / 100 })
+          }}
+        />
+      </label>
+
+      {(profile.withdrawal_scheme ?? 'performance_cola') === 'performance_cola' && (
+        <>
+          <label className="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={profile.performance_skip_cola_after_down_year ?? true}
+              disabled={disabled}
+              onChange={(e) =>
+                set({ performance_skip_cola_after_down_year: e.target.checked })
+              }
+              className="rounded border-slate-600"
+            />
+            Skip COLA bump after a down portfolio year
+          </label>
+          <label className="block">
+            <span className="text-sm text-slate-400">Max raise cap (% / yr, optional)</span>
+            <input
+              type="number"
+              step={1}
+              placeholder="No cap"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+              value={
+                profile.performance_max_raise_pct != null
+                  ? profile.performance_max_raise_pct * 100
+                  : ''
+              }
+              disabled={disabled}
+              onChange={(e) => {
+                const v = e.target.value.trim()
+                set({ performance_max_raise_pct: v === '' ? null : num(v) / 100 })
+              }}
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-slate-400">Max cut cap (% / yr, optional)</span>
+            <input
+              type="number"
+              step={1}
+              placeholder="No cap"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+              value={
+                profile.performance_max_cut_pct != null
+                  ? profile.performance_max_cut_pct * 100
+                  : ''
+              }
+              disabled={disabled}
+              onChange={(e) => {
+                const v = e.target.value.trim()
+                set({ performance_max_cut_pct: v === '' ? null : num(v) / 100 })
+              }}
+            />
+          </label>
+        </>
+      )}
+
       <label className="block">
         <span className="text-sm text-slate-400">Expected return (% / yr)</span>
         <input

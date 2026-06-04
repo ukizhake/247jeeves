@@ -1,5 +1,7 @@
 export type FilingStatus = 'single' | 'mfj'
 
+export type WithdrawalScheme = 'cola' | 'fixed_annuity' | 'performance_cola'
+
 export interface Accounts {
   traditional_ira: number
   roth_ira: number
@@ -34,6 +36,14 @@ export interface Profile {
   return_rate: number
   return_volatility?: number
   inflation_rate: number
+  withdrawal_scheme?: WithdrawalScheme
+  spending_cola_rate?: number | null
+  annuity_income_annual?: number
+  annuity_cola_rate?: number | null
+  annual_review_month?: number
+  performance_skip_cola_after_down_year?: boolean
+  performance_max_raise_pct?: number | null
+  performance_max_cut_pct?: number | null
   taxable_cost_basis_ratio?: number
 }
 
@@ -45,6 +55,7 @@ export interface ScenarioOverrides {
   target_bracket_rate?: number
   return_scenario?: 'base' | 'bad_early' | 'flat_low'
   net_portfolio_income?: boolean
+  withdrawal_policy?: 'phase_default' | 'taxable_first' | 'cash_first' | 'ira_first'
 }
 
 export interface YearState {
@@ -78,6 +89,9 @@ export interface YearState {
   total_income?: number
   portfolio_income?: number
   spending_target?: number
+  annuity_income?: number
+  spending_adjustment_note?: string
+  implied_withdrawal_rate?: number
   withdrawal_need?: number
   return_rate_applied?: number
   total_deductions?: number
@@ -143,6 +157,53 @@ export interface MonteCarloResult {
   return_volatility: number
   year_bands: MonteCarloYearBand[]
   meta?: Record<string, string | number | boolean | null>
+}
+
+export interface StrategySummary {
+  policy: string
+  label: string
+  success_rate: number
+  median_final_wealth: number
+  p10_final_wealth: number
+  p90_final_wealth: number
+  median_lifetime_tax: number
+}
+
+export interface StrategyComparisonResult {
+  num_paths: number
+  seed: number | null
+  mean_return: number
+  return_volatility: number
+  strategies: StrategySummary[]
+  meta?: Record<string, string | number | boolean | null>
+}
+
+export interface StrategyComparisonResponse {
+  profile_id: number
+  result: StrategyComparisonResult
+}
+
+export interface AnnualReviewResult {
+  review_month: number
+  review_month_name: string
+  withdrawal_scheme: string
+  current_annual_spending: number
+  recommended_annual_spending: number
+  cola_rate_applied: number
+  cola_dollar_change: number
+  annuity_income: number
+  total_wealth: number
+  implied_withdrawal_rate: number
+  portfolio_income_estimate: number
+  portfolio_withdrawal_estimate: number
+  prior_year_return: number | null
+  performance_note: string
+  suggestions: string[]
+}
+
+export interface AnnualReviewResponse {
+  profile_id: number
+  result: AnnualReviewResult
 }
 
 export interface MonteCarloResponse {

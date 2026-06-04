@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field
 
+from engine.annual_review import AnnualReviewResult
 from engine.import_.fidelity import FidelityImportResult
 from engine.models.profile import Profile, ScenarioOverrides
-from engine.models.simulation import MonteCarloResult, SimulationResult
+from engine.models.simulation import MonteCarloResult, SimulationResult, StrategyComparisonResult
 
 
 class MonteCarloRequest(BaseModel):
@@ -48,3 +49,20 @@ class MonteCarloResponse(BaseModel):
 
 class FidelityImportResponse(BaseModel):
     result: FidelityImportResult
+
+
+class StrategyComparisonResponse(BaseModel):
+    profile_id: int
+    result: StrategyComparisonResult
+
+
+class AnnualReviewRequest(BaseModel):
+    prior_year_return: float | None = Field(
+        None,
+        description="Portfolio return last 12 months (decimal). Negative triggers performance hold.",
+    )
+
+
+class AnnualReviewResponse(BaseModel):
+    profile_id: int
+    result: AnnualReviewResult

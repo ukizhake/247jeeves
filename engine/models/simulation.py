@@ -26,6 +26,9 @@ class YearState(BaseModel):
     total_income: float = 0
     portfolio_income: float = 0
     spending_target: float = 0
+    annuity_income: float = 0
+    spending_adjustment_note: str = ""
+    implied_withdrawal_rate: float = 0
     withdrawal_need: float = 0
     unfunded_spending: float = 0
     return_rate_applied: float = 0
@@ -112,4 +115,23 @@ class MonteCarloResult(BaseModel):
     mean_return: float
     return_volatility: float
     year_bands: list[MonteCarloYearBand]
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class StrategySummary(BaseModel):
+    policy: str
+    label: str
+    success_rate: float
+    median_final_wealth: float
+    p10_final_wealth: float
+    p90_final_wealth: float
+    median_lifetime_tax: float
+
+
+class StrategyComparisonResult(BaseModel):
+    num_paths: int
+    seed: int | None
+    mean_return: float
+    return_volatility: float
+    strategies: list[StrategySummary]
     meta: dict[str, Any] = Field(default_factory=dict)
