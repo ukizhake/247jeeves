@@ -82,7 +82,7 @@ export function FidelityImport({ profile, onApply, disabled, debug = false }: Pr
             type="button"
             disabled={disabled || loading}
             onClick={() => inputRef.current?.click()}
-            className="rounded-lg border border-cyan-700/60 bg-cyan-950/40 px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-950/70 disabled:opacity-50"
+            className="rounded-lg border border-emerald-700 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-200 hover:bg-emerald-900/40 disabled:opacity-50"
           >
             {loading ? 'Parsing…' : 'Choose CSV'}
           </button>
