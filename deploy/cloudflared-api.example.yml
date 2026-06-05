@@ -1,0 +1,9 @@
+# Merge into ~/.cloudflared/config.yml on Mac Mini (keep existing mendonbend rules).
+# In Cloudflare Zero Trust → Networks → Tunnels, attach hostname api.247jeeves.com
+# OR add a DNS CNAME at your DNS host (Vercel DNS) → <TUNNEL_ID>.cfargotunnel.com
+
+ingress:
+  - hostname: api.247jeeves.com
+    service: http://127.0.0.1:8888
+  # ... your existing hostnames (e.g. mendonbend.com) ...
+  - service: http_status:404
