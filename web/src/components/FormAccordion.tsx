@@ -1,40 +1,9 @@
 import { useId, useState, type ReactNode } from 'react'
-
-type Accent = 'emerald' | 'amber' | 'sky'
-
-const ACCENT_STYLES: Record<
-  Accent,
-  { shell: string; left: string; header: string; headerHover: string; toggle: string; panel: string }
-> = {
-  emerald: {
-    shell: 'border-emerald-800/70 bg-emerald-950/25',
-    left: 'border-l-emerald-500',
-    header: 'text-emerald-200',
-    headerHover: 'hover:bg-emerald-950/50',
-    toggle: 'border-emerald-700/60 bg-emerald-950/60 text-emerald-300',
-    panel: 'border-emerald-800/50 bg-emerald-950/15',
-  },
-  amber: {
-    shell: 'border-amber-800/70 bg-amber-950/25',
-    left: 'border-l-amber-500',
-    header: 'text-amber-200',
-    headerHover: 'hover:bg-amber-950/50',
-    toggle: 'border-amber-700/60 bg-amber-950/60 text-amber-300',
-    panel: 'border-amber-800/50 bg-amber-950/15',
-  },
-  sky: {
-    shell: 'border-sky-800/70 bg-sky-950/25',
-    left: 'border-l-sky-500',
-    header: 'text-sky-200',
-    headerHover: 'hover:bg-sky-950/50',
-    toggle: 'border-sky-700/60 bg-sky-950/60 text-sky-300',
-    panel: 'border-sky-800/50 bg-sky-950/15',
-  },
-}
+import { FORM_ACCENT_STYLES, type FormAccent } from './formAccents'
 
 interface Props {
   title: string
-  accent: Accent
+  accent: FormAccent
   debugSuffix?: string
   debug?: boolean
   children: ReactNode
@@ -44,7 +13,7 @@ export function FormAccordion({ title, accent, debugSuffix, debug, children }: P
   const [open, setOpen] = useState(false)
   const panelId = useId()
   const label = debug && debugSuffix ? `${title} ${debugSuffix}` : title
-  const styles = ACCENT_STYLES[accent]
+  const styles = FORM_ACCENT_STYLES[accent]
 
   return (
     <div

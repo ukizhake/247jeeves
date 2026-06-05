@@ -57,11 +57,10 @@ export function FidelityImport({ profile, onApply, disabled, debug = false }: Pr
   }
 
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-4 sm:col-span-2">
+    <div className="sm:col-span-2">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-medium text-slate-200">Import from Fidelity</h3>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="text-xs text-slate-500">
             Upload Portfolio Positions CSV from Fidelity — accounts map to Traditional, Roth,
             Taxable, and Cash (money market sweeps).
           </p>
@@ -83,7 +82,7 @@ export function FidelityImport({ profile, onApply, disabled, debug = false }: Pr
             type="button"
             disabled={disabled || loading}
             onClick={() => inputRef.current?.click()}
-            className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+            className="rounded-lg border border-cyan-700/60 bg-cyan-950/40 px-3 py-2 text-sm text-cyan-100 hover:bg-cyan-950/70 disabled:opacity-50"
           >
             {loading ? 'Parsing…' : 'Choose CSV'}
           </button>

@@ -1,6 +1,7 @@
 import type { AssetAllocation, Profile } from '../types'
 import { FidelityImport } from './FidelityImport'
 import { FormAccordion } from './FormAccordion'
+import { FormSection } from './FormSection'
 
 interface Props {
   profile: Profile
@@ -101,6 +102,7 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
+      <FormSection title="Profile & household" accent="violet">
       <label className="block sm:col-span-2">
         <span className="text-sm text-slate-400">{debug ? 'Plan name' : 'Name'}</span>
         <input
@@ -120,7 +122,7 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
             onClick={() => setHousehold(false)}
             className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
               !isCouple
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-violet-600 text-white'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -132,7 +134,7 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
             onClick={() => setHousehold(true)}
             className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
               isCouple
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-violet-600 text-white'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -204,8 +206,9 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
           onChange={(e) => set({ projection_start_year: num(e.target.value) })}
         />
       </label>
+      </FormSection>
 
-      <p className="sm:col-span-2 text-sm font-medium text-slate-300">Annual income</p>
+      <FormSection title="Annual income" accent="teal">
       <label className="block">
         <span className="text-sm text-slate-400">Rental income</span>
         <input
@@ -246,8 +249,9 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
           onChange={(e) => setInc({ consulting: num(e.target.value) })}
         />
       </label>
+      </FormSection>
 
-      <p className="sm:col-span-2 text-sm font-medium text-slate-300">Social Security</p>
+      <FormSection title="Social Security" accent="indigo">
       <p className="sm:col-span-2 text-xs text-slate-500">
         Enter the <strong className="font-medium text-slate-400">monthly</strong> benefit from{' '}
         <a
@@ -394,6 +398,7 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
           onChange={(e) => set({ annual_spending: num(e.target.value) })}
         />
       </label>
+      </FormSection>
 
       <FormAccordion
         title="Withdrawal & spending path"
@@ -847,6 +852,7 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
         })()}
       </FormAccordion>
 
+      <FormSection title="Market assumptions" accent="orange">
       <label className="block">
         <span className="text-sm text-slate-400">Expected return (% / yr)</span>
         <input
@@ -890,9 +896,13 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
           onChange={(e) => set({ inflation_rate: num(e.target.value) / 100 })}
         />
       </label>
+      </FormSection>
 
-      <FidelityImport profile={profile} onApply={onChange} disabled={disabled} debug={debug} />
+      <FormSection title="Import balances" accent="cyan">
+        <FidelityImport profile={profile} onApply={onChange} disabled={disabled} debug={debug} />
+      </FormSection>
 
+      <FormSection title="Account balances" accent="fuchsia">
       <label className="block">
         <span className="text-sm text-slate-400">Traditional IRA</span>
         <input
@@ -933,6 +943,7 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
           onChange={(e) => setAcct({ cash: num(e.target.value) })}
         />
       </label>
+      </FormSection>
     </div>
   )
 }
