@@ -12,9 +12,10 @@ interface Props {
   result: AnnualReviewResult
   onApplyRecommended: () => void
   disabled?: boolean
+  debug?: boolean
 }
 
-export function AnnualReview({ result, onApplyRecommended, disabled }: Props) {
+export function AnnualReview({ result, onApplyRecommended, disabled, debug = false }: Props) {
   const changeUp = result.cola_dollar_change > 0
   const changeDown = result.cola_dollar_change < 0
 
@@ -73,7 +74,9 @@ export function AnnualReview({ result, onApplyRecommended, disabled }: Props) {
         </div>
       </div>
 
-      <p className="mt-3 text-sm text-slate-300">{result.performance_note}</p>
+      {debug && (
+        <p className="mt-3 text-sm text-slate-300">{result.performance_note}</p>
+      )}
       <p className="mt-1 text-xs text-slate-500">
         COLA rate {pct(result.cola_rate_applied)} · Portfolio income est.{' '}
         {money(result.portfolio_income_estimate)} · Est. portfolio withdrawal{' '}

@@ -24,7 +24,7 @@ function portfolioIncome(y: YearState): number {
 const num = 'whitespace-nowrap px-2 py-1.5 text-right tabular-nums'
 const lbl = 'whitespace-nowrap px-2 py-1.5 text-left'
 
-export function SimulationTable({ years }: { years: YearState[] }) {
+export function SimulationTable({ years, debug = false }: { years: YearState[]; debug?: boolean }) {
   const showSpouse = years.some((y) => y.spouse_age != null)
   const showSpouseSs = years.some((y) => (y.spouse_social_security ?? 0) > 0)
   const showWdBasis = years.some((y) => (y.withdrawal_taxable_basis ?? 0) > 0)
@@ -33,7 +33,8 @@ export function SimulationTable({ years }: { years: YearState[] }) {
   )
   const showAnnuity = years.some((y) => (y.annuity_income ?? 0) > 0)
   const showIwr = years.some((y) => (y.implied_withdrawal_rate ?? 0) > 0.001)
-  const showSpendNote = years.some((y) => (y.spending_adjustment_note ?? '').length > 0)
+  const showSpendNote =
+    debug && years.some((y) => (y.spending_adjustment_note ?? '').length > 0)
 
   const portfolioCols =
     (showSpouseSs ? 7 : 6) +
@@ -42,6 +43,7 @@ export function SimulationTable({ years }: { years: YearState[] }) {
     (showIwr ? 1 : 0) +
     (showSpendNote ? 1 : 0) +
     (showNonBaseReturn ? 1 : 0)
+  const phaseCols = debug ? 1 : 0
   const taxBreakdownCols = showWdBasis ? 9 : 7
 
   return (
@@ -49,7 +51,7 @@ export function SimulationTable({ years }: { years: YearState[] }) {
       <table className="w-max min-w-full text-left text-xs sm:text-sm">
         <thead className="bg-slate-900 text-slate-400">
           <tr className="border-b border-slate-700">
-            <th colSpan={showSpouse ? 4 : 3} className="px-2 py-1.5" />
+            <th colSpan={(showSpouse ? 3 : 2) + phaseCols} className="px-2 py-1.5" />
             <th
               colSpan={portfolioCols}
               className="px-2 py-1.5 text-center font-medium text-emerald-400/90"
@@ -79,7 +81,7 @@ export function SimulationTable({ years }: { years: YearState[] }) {
             <th className={lbl}>Yr</th>
             <th className={num}>You</th>
             {showSpouse && <th className={num}>Sp</th>}
-            <th className={lbl}>Phase</th>
+            {debug && <th className={lbl}>Phase</th>}
             <th className={num}>Fund</th>
             <th className={num}>Rental</th>
             <th className={num}>Your SS</th>
@@ -171,9 +173,11 @@ export function SimulationTable({ years }: { years: YearState[] }) {
               <td className={lbl}>{y.year}</td>
               <td className={num}>{y.age}</td>
               {showSpouse && <td className={num}>{y.spouse_age ?? '—'}</td>}
-              <td className={`${lbl} capitalize`}>
-                {y.phase.replace(/_/g, ' ').replace('early retirement', 'early')}
-              </td>
+              {debug && (
+                <td className={`${lbl} capitalize`}>
+                  {y.phase.replace(/_/g, ' ').replace('early retirement', 'early')}
+                </td>
+              )}
               <td className={num}>{cell(y.fund_income)}</td>
               <td className={num}>{cell(y.rental_income)}</td>
               <td className={num}>{cell(y.primary_social_security ?? y.social_security)}</td>

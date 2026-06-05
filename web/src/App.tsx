@@ -28,6 +28,7 @@ import { SummaryCards } from './components/SummaryCards'
 import { RETURN_SCENARIOS, type ReturnScenarioId } from './constants/returnScenarios'
 import { SPENDING_SCHEME_OPTIONS, spendingSchemeLabel } from './constants/spendingSchemes'
 import { defaultProfile, defaultSingleProfile } from './defaultProfile'
+import { isDebugMode } from './debug'
 import type {
   AnnuityComparisonResult,
   SafemaxReportResult,
@@ -382,6 +383,7 @@ function App() {
   }
 
   const phase = result?.years[0]?.phase ?? '—'
+  const debug = isDebugMode()
 
   return (
     <div className="min-h-screen w-full px-3 py-6 sm:px-4">
@@ -395,9 +397,11 @@ function App() {
             className="h-[4.5rem] w-auto max-w-[min(100%,280px)] shrink-0 object-contain object-left sm:h-20"
           />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-brand">
-              Phase 3e · CAPE / SAFEMAX, annuity, spending schemes & rebalance
-            </p>
+            {debug && (
+              <p className="text-sm font-medium text-brand">
+                Phase 3e · CAPE / SAFEMAX, annuity, spending schemes & rebalance
+              </p>
+            )}
             <p className="mt-2 max-w-2xl text-slate-400">
               Your retirement tax butler — withdrawal sequencing, Roth conversions, and RMD
               forecasting. Educational model only; not tax advice.
@@ -408,8 +412,8 @@ function App() {
 
       <div className="flex w-full flex-col gap-6">
         <section className="mx-auto w-full max-w-[1600px]">
-          <h2 className="mb-4 text-lg font-semibold">Your plan</h2>
-          <ProfileForm profile={profile} onChange={setProfile} disabled={loading} />
+          <h2 className="mb-4 text-lg font-semibold">{debug ? 'Your plan' : 'Your profile'}</h2>
+          <ProfileForm profile={profile} onChange={setProfile} disabled={loading} debug={debug} />
 
           <div className="mt-4 grid max-w-3xl gap-4 sm:grid-cols-2">
             <label className="block">
@@ -589,7 +593,7 @@ function App() {
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
-              New plan
+              {debug ? 'New plan' : 'Reset'}
             </button>
             <button
               type="button"
@@ -638,21 +642,21 @@ function App() {
         {safemaxResult && (
           <section className="mx-auto w-full max-w-[1600px]">
             <h2 className="mb-3 text-lg font-semibold">CAPE & SAFEMAX education</h2>
-            <SafemaxReport result={safemaxResult} />
+            <SafemaxReport result={safemaxResult} debug={debug} />
           </section>
         )}
 
         {annuityCompareResult && (
           <section className="mx-auto w-full max-w-[1600px]">
             <h2 className="mb-3 text-lg font-semibold">Insurance annuity vs book FA</h2>
-            <AnnuityComparison result={annuityCompareResult} />
+            <AnnuityComparison result={annuityCompareResult} debug={debug} />
           </section>
         )}
 
         {rebalanceResult && (
           <section className="mx-auto w-full max-w-[1600px]">
             <h2 className="mb-3 text-lg font-semibold">Target allocation & rebalance</h2>
-            <RebalanceReport result={rebalanceResult} />
+            <RebalanceReport result={rebalanceResult} debug={debug} />
           </section>
         )}
 
@@ -662,6 +666,7 @@ function App() {
             <AnnualReview
               result={annualReviewResult}
               disabled={loading}
+              debug={debug}
               onApplyRecommended={() => {
                 setProfile({ ...profile, annual_spending: annualReviewResult.recommended_annual_spending })
               }}
@@ -700,7 +705,7 @@ function App() {
         {stressResults && stressResults.length > 1 && (
           <section className="mx-auto w-full max-w-[1600px]">
             <h2 className="mb-3 text-lg font-semibold">Market scenario comparison</h2>
-            <StressComparison results={stressResults} />
+            <StressComparison results={stressResults} debug={debug} />
           </section>
         )}
 
@@ -709,9 +714,11 @@ function App() {
             <section className="w-full">
               <div className="mb-3 flex flex-wrap items-center gap-3">
                 <h2 className="text-lg font-semibold">Year-by-year projection</h2>
-                <span className="rounded-full bg-slate-800 px-3 py-1 text-sm capitalize">
-                  Phase: {phase.replace(/_/g, ' ')}
-                </span>
+                {debug && (
+                  <span className="rounded-full bg-slate-800 px-3 py-1 text-sm capitalize">
+                    Phase: {phase.replace(/_/g, ' ')}
+                  </span>
+                )}
                 {result.meta?.return_scenario && (
                   <span className="rounded-full bg-slate-800 px-3 py-1 text-sm">
                     Market: {String(result.meta.return_scenario).replace(/_/g, ' ')}
@@ -723,7 +730,7 @@ function App() {
                   </span>
                 )}
               </div>
-              <SimulationTable years={result.years} />
+              <SimulationTable years={result.years} debug={debug} />
             </section>
 
             <section className="mx-auto w-full max-w-[1600px]">
@@ -733,7 +740,7 @@ function App() {
             <section className="mx-auto grid w-full max-w-[1600px] gap-8 lg:grid-cols-2">
               <div>
                 <h2 className="mb-3 text-lg font-semibold">This year&apos;s recommendations</h2>
-                <Recommendations items={result.recommendations} />
+                <Recommendations items={result.recommendations} debug={debug} />
               </div>
               <div>
                 <h2 className="mb-3 text-lg font-semibold">Account balances over time</h2>

@@ -8,7 +8,13 @@ function pct(n: number) {
   return `${n.toFixed(1)}%`
 }
 
-export function AnnuityComparison({ result }: { result: AnnuityComparisonResult }) {
+export function AnnuityComparison({
+  result,
+  debug = false,
+}: {
+  result: AnnuityComparisonResult
+  debug?: boolean
+}) {
   const edu = result.education
 
   return (
@@ -36,7 +42,7 @@ export function AnnuityComparison({ result }: { result: AnnuityComparisonResult 
               <tr key={s.variant} className="border-t border-slate-800">
                 <td className="px-3 py-2">
                   <span className="font-medium text-slate-200">{s.label}</span>
-                  {s.notes && (
+                  {debug && s.notes && (
                     <p className="mt-0.5 text-xs text-slate-500">{s.notes}</p>
                   )}
                 </td>

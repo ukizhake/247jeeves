@@ -10,7 +10,13 @@ const SCENARIO_NAMES: Record<string, string> = {
   flat_low: 'Flat / low',
 }
 
-export function StressComparison({ results }: { results: SimulationResult[] }) {
+export function StressComparison({
+  results,
+  debug = false,
+}: {
+  results: SimulationResult[]
+  debug?: boolean
+}) {
   if (results.length === 0) return null
 
   return (
@@ -45,7 +51,7 @@ export function StressComparison({ results }: { results: SimulationResult[] }) {
         </tbody>
       </table>
       <p className="px-3 py-2 text-xs text-slate-500">
-        Same plan, different deterministic return paths. Withdrawal need = spending minus portfolio
+        Same {debug ? 'plan' : 'profile'}, different deterministic return paths. Withdrawal need = spending minus portfolio
         income (when net income is on).
       </p>
     </div>

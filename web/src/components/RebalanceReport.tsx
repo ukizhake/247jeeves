@@ -10,9 +10,10 @@ function pct(n: number) {
 
 interface Props {
   result: RebalanceReportResult
+  debug?: boolean
 }
 
-export function RebalanceReport({ result }: Props) {
+export function RebalanceReport({ result, debug = false }: Props) {
   return (
     <div className="rounded-xl border border-sky-800/60 bg-sky-950/20 p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -108,7 +109,7 @@ export function RebalanceReport({ result }: Props) {
         </div>
       )}
 
-      {result.rebalance_notes.length > 0 && (
+      {debug && result.rebalance_notes.length > 0 && (
         <ul className="mt-4 list-inside list-disc space-y-1 text-sm text-slate-400">
           {result.rebalance_notes.map((n) => (
             <li key={n}>{n}</li>

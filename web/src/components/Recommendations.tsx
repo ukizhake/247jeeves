@@ -1,3 +1,4 @@
+import { publicText } from '../debug'
 import type { Recommendation } from '../types'
 
 function formatUsd(n: number | undefined) {
@@ -5,7 +6,7 @@ function formatUsd(n: number | undefined) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
 }
 
-export function Recommendations({ items }: { items: Recommendation[] }) {
+export function Recommendations({ items, debug = false }: { items: Recommendation[]; debug?: boolean }) {
   if (!items.length) {
     return <p className="text-slate-400">No recommendations for this scenario yet.</p>
   }
@@ -18,27 +19,35 @@ export function Recommendations({ items }: { items: Recommendation[] }) {
           className="rounded-xl border border-emerald-900/50 bg-emerald-950/30 p-4"
         >
           <h3 className="font-semibold text-emerald-300">{rec.title}</h3>
-          <p className="mt-1 text-sm text-slate-300">{rec.rationale}</p>
+          <p className="mt-1 text-sm text-slate-300">{publicText(rec.rationale, debug)}</p>
           <ul className="mt-3 space-y-2">
             {rec.actions.map((a, i) => (
               <li key={i} className="text-sm">
                 {a.type === 'roth_convert' && (
                   <span>
-                    Convert <strong>{formatUsd(a.amount)}</strong> to Roth — {a.note}
+                    Convert <strong>{formatUsd(a.amount)}</strong> to Roth
+                    {debug && a.note ? ` — ${publicText(a.note, debug)}` : ''}
                   </span>
                 )}
                 {a.type === 'withdraw' && (
                   <span>
-                    Withdraw <strong>{formatUsd(a.amount)}</strong> from {a.account} — {a.note}
+                    Withdraw <strong>{formatUsd(a.amount)}</strong> from {a.account}
+                    {debug && a.note ? ` — ${publicText(a.note, debug)}` : ''}
                   </span>
                 )}
-                {a.type === 'delay_social_security' && <span>{a.note}</span>}
-                {a.type === 'warn' && <span className="text-amber-300">⚠ {a.note}</span>}
-                {a.type === 'info' && <span>{a.note}</span>}
-                {a.type === 'asset_location' && (
-                  <span className="text-sky-300">📍 {a.note}</span>
+                {a.type === 'delay_social_security' && (
+                  <span>{debug ? publicText(a.note, debug) : 'Consider delaying Social Security'}</span>
                 )}
-                {a.type === 'qcd' && <span className="text-violet-300">❤ {a.note}</span>}
+                {a.type === 'warn' && (
+                  <span className="text-amber-300">⚠ {publicText(a.note, debug)}</span>
+                )}
+                {a.type === 'info' && <span>{publicText(a.note, debug)}</span>}
+                {a.type === 'asset_location' && (
+                  <span className="text-sky-300">📍 {publicText(a.note, debug)}</span>
+                )}
+                {a.type === 'qcd' && (
+                  <span className="text-violet-300">❤ {publicText(a.note, debug)}</span>
+                )}
               </li>
             ))}
           </ul>

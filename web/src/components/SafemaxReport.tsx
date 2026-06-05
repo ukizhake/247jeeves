@@ -15,13 +15,15 @@ const BAND_LABELS: Record<string, string> = {
   high: 'High valuation (expensive stocks)',
 }
 
-export function SafemaxReport({ result }: { result: SafemaxReportResult }) {
+export function SafemaxReport({ result, debug = false }: { result: SafemaxReportResult; debug?: boolean }) {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-indigo-800/50 bg-indigo-950/20 p-4 text-sm text-slate-300">
         <p className="font-medium text-indigo-300">SAFEMAX vs Shiller CAPE (educational)</p>
         <p className="mt-2">
-          Deck methodology: 30-year COLA withdrawals, 55/40/5 allocation, tax-advantaged accounts.
+          {debug
+            ? 'Deck methodology: 30-year COLA withdrawals, 55/40/5 allocation, tax-advantaged accounts. '
+            : '30-year COLA withdrawals, 55/40/5 allocation, tax-advantaged accounts. '}
           Your estimate uses CAPE{' '}
           <span className="tabular-nums text-slate-100">{result.shiller_cape.toFixed(1)}</span>
           {result.cape_source === 'default_assumption' && (
@@ -29,7 +31,9 @@ export function SafemaxReport({ result }: { result: SafemaxReportResult }) {
           )}
           .
         </p>
-        <p className="mt-2 text-xs text-slate-500">{result.horizon_adjustment_note}</p>
+        {debug && (
+          <p className="mt-2 text-xs text-slate-500">{result.horizon_adjustment_note}</p>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -65,7 +69,7 @@ export function SafemaxReport({ result }: { result: SafemaxReportResult }) {
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <p className="border-b border-slate-800 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-300">
-          Historical deck anchors near your CAPE
+          {debug ? 'Historical deck anchors near your CAPE' : 'Historical SAFEMAX anchors near your CAPE'}
         </p>
         <table className="w-full min-w-[520px] text-left text-sm">
           <thead className="bg-slate-900 text-slate-400">
@@ -73,7 +77,7 @@ export function SafemaxReport({ result }: { result: SafemaxReportResult }) {
               <th className="px-3 py-2">Retire date</th>
               <th className="px-3 py-2 text-right">CAPE</th>
               <th className="px-3 py-2 text-right">SAFEMAX</th>
-              <th className="px-3 py-2">Note</th>
+              {debug && <th className="px-3 py-2">Note</th>}
             </tr>
           </thead>
           <tbody>
@@ -82,7 +86,7 @@ export function SafemaxReport({ result }: { result: SafemaxReportResult }) {
                 <td className="px-3 py-2 text-slate-300">{a.retirement_date || '—'}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{a.cape.toFixed(2)}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{(a.safemax * 100).toFixed(2)}%</td>
-                <td className="px-3 py-2 text-xs text-slate-500">{a.note}</td>
+                {debug && <td className="px-3 py-2 text-xs text-slate-500">{a.note}</td>}
               </tr>
             ))}
           </tbody>

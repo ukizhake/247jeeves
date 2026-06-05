@@ -6,6 +6,7 @@ interface Props {
   profile: Profile
   onApply: (profile: Profile) => void
   disabled?: boolean
+  debug?: boolean
 }
 
 function money(n: number) {
@@ -20,7 +21,7 @@ const bucketLabel: Record<string, string> = {
   unknown: 'Unknown',
 }
 
-export function FidelityImport({ profile, onApply, disabled }: Props) {
+export function FidelityImport({ profile, onApply, disabled, debug = false }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -93,7 +94,7 @@ export function FidelityImport({ profile, onApply, disabled }: Props) {
               onClick={applyToPlan}
               className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
             >
-              Apply to plan
+              {debug ? 'Apply to plan' : 'Apply balances'}
             </button>
           )}
         </div>

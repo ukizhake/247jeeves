@@ -1,10 +1,12 @@
 import type { AssetAllocation, Profile } from '../types'
 import { FidelityImport } from './FidelityImport'
+import { FormAccordion } from './FormAccordion'
 
 interface Props {
   profile: Profile
   onChange: (p: Profile) => void
   disabled?: boolean
+  debug?: boolean
 }
 
 function num(v: string) {
@@ -48,7 +50,7 @@ function money(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 }
 
-export function ProfileForm({ profile, onChange, disabled }: Props) {
+export function ProfileForm({ profile, onChange, disabled, debug = false }: Props) {
   const isCouple = profile.filing_status === 'mfj'
   const yourMonthly = Math.round(profile.social_security_annual_at_claim / 12) || 0
   const spouseMonthly = Math.round((profile.spouse_social_security_annual_at_claim ?? 0) / 12) || 0
@@ -100,7 +102,7 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <label className="block sm:col-span-2">
-        <span className="text-sm text-slate-400">Plan name</span>
+        <span className="text-sm text-slate-400">{debug ? 'Plan name' : 'Name'}</span>
         <input
           className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
           value={profile.name}
@@ -176,7 +178,9 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
       )}
 
       <label className="block">
-        <span className="text-sm text-slate-400">Plan through age</span>
+        <span className="text-sm text-slate-400">
+          {debug ? 'Plan through age' : 'Project through age'}
+        </span>
         <input
           type="number"
           min={profile.age}
@@ -391,10 +395,12 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
         />
       </label>
 
-      <p className="sm:col-span-2 text-sm font-medium text-emerald-400/90">
-        Withdrawal & spending path (Phase 3a)
-      </p>
-
+      <FormAccordion
+        title="Withdrawal & spending path"
+        accent="emerald"
+        debugSuffix="(Phase 3a)"
+        debug={debug}
+      >
       <label className="block">
         <span className="text-sm text-slate-400">Withdrawal scheme</span>
         <select
@@ -465,7 +471,8 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
 
       {profile.withdrawal_scheme === 'fixed_percentage' && (
         <p className="sm:col-span-2 text-xs text-slate-500">
-          FP: spending moves with portfolio each year (deck ~4.7% on 55/40/5).
+          FP: spending moves with portfolio each year
+          {debug ? ' (deck ~4.7% on 55/40/5).' : '.'}
         </p>
       )}
 
@@ -549,10 +556,68 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
         />
       </label>
 
-      <p className="sm:col-span-2 text-sm font-medium text-amber-400/90">
-        Insurance annuity / SPIA (Phase 3d)
-      </p>
+      {(profile.withdrawal_scheme ?? 'performance_cola') === 'performance_cola' && (
+        <>
+          <label className="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={profile.performance_skip_cola_after_down_year ?? true}
+              disabled={disabled}
+              onChange={(e) =>
+                set({ performance_skip_cola_after_down_year: e.target.checked })
+              }
+              className="rounded border-slate-600"
+            />
+            Skip COLA bump after a down portfolio year
+          </label>
+          <label className="block">
+            <span className="text-sm text-slate-400">Max raise cap (% / yr, optional)</span>
+            <input
+              type="number"
+              step={1}
+              placeholder="No cap"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+              value={
+                profile.performance_max_raise_pct != null
+                  ? profile.performance_max_raise_pct * 100
+                  : ''
+              }
+              disabled={disabled}
+              onChange={(e) => {
+                const v = e.target.value.trim()
+                set({ performance_max_raise_pct: v === '' ? null : num(v) / 100 })
+              }}
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm text-slate-400">Max cut cap (% / yr, optional)</span>
+            <input
+              type="number"
+              step={1}
+              placeholder="No cap"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
+              value={
+                profile.performance_max_cut_pct != null
+                  ? profile.performance_max_cut_pct * 100
+                  : ''
+              }
+              disabled={disabled}
+              onChange={(e) => {
+                const v = e.target.value.trim()
+                set({ performance_max_cut_pct: v === '' ? null : num(v) / 100 })
+              }}
+            />
+          </label>
+        </>
+      )}
+      </FormAccordion>
 
+      <FormAccordion
+        title="Insurance annuity / SPIA"
+        accent="amber"
+        debugSuffix="(Phase 3d)"
+        debug={debug}
+      >
       <label className="block">
         <span className="text-sm text-slate-400">Guaranteed income type</span>
         <select
@@ -627,66 +692,14 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
           }}
         />
       </label>
+      </FormAccordion>
 
-      {(profile.withdrawal_scheme ?? 'performance_cola') === 'performance_cola' && (
-        <>
-          <label className="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
-            <input
-              type="checkbox"
-              checked={profile.performance_skip_cola_after_down_year ?? true}
-              disabled={disabled}
-              onChange={(e) =>
-                set({ performance_skip_cola_after_down_year: e.target.checked })
-              }
-              className="rounded border-slate-600"
-            />
-            Skip COLA bump after a down portfolio year
-          </label>
-          <label className="block">
-            <span className="text-sm text-slate-400">Max raise cap (% / yr, optional)</span>
-            <input
-              type="number"
-              step={1}
-              placeholder="No cap"
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
-              value={
-                profile.performance_max_raise_pct != null
-                  ? profile.performance_max_raise_pct * 100
-                  : ''
-              }
-              disabled={disabled}
-              onChange={(e) => {
-                const v = e.target.value.trim()
-                set({ performance_max_raise_pct: v === '' ? null : num(v) / 100 })
-              }}
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm text-slate-400">Max cut cap (% / yr, optional)</span>
-            <input
-              type="number"
-              step={1}
-              placeholder="No cap"
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
-              value={
-                profile.performance_max_cut_pct != null
-                  ? profile.performance_max_cut_pct * 100
-                  : ''
-              }
-              disabled={disabled}
-              onChange={(e) => {
-                const v = e.target.value.trim()
-                set({ performance_max_cut_pct: v === '' ? null : num(v) / 100 })
-              }}
-            />
-          </label>
-        </>
-      )}
-
-      <p className="sm:col-span-2 text-sm font-medium text-sky-400/90">
-        Target allocation & rebalance (Phase 3b)
-      </p>
-
+      <FormAccordion
+        title="Target allocation & rebalance"
+        accent="sky"
+        debugSuffix="(Phase 3b)"
+        debug={debug}
+      >
       {(() => {
         const target = profile.target_allocation ?? DEFAULT_TARGET_ALLOC
         const targetSum = (target.stocks + target.bonds + target.cash) * 100
@@ -832,6 +845,7 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
             </>
           )
         })()}
+      </FormAccordion>
 
       <label className="block">
         <span className="text-sm text-slate-400">Expected return (% / yr)</span>
@@ -877,7 +891,7 @@ export function ProfileForm({ profile, onChange, disabled }: Props) {
         />
       </label>
 
-      <FidelityImport profile={profile} onApply={onChange} disabled={disabled} />
+      <FidelityImport profile={profile} onApply={onChange} disabled={disabled} debug={debug} />
 
       <label className="block">
         <span className="text-sm text-slate-400">Traditional IRA</span>
