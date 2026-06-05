@@ -122,7 +122,7 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
             onClick={() => setHousehold(false)}
             className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
               !isCouple
-                ? 'bg-violet-600 text-white'
+                ? 'bg-emerald-600 text-white'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -134,7 +134,7 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
             onClick={() => setHousehold(true)}
             className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
               isCouple
-                ? 'bg-violet-600 text-white'
+                ? 'bg-emerald-600 text-white'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
