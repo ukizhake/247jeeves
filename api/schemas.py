@@ -99,3 +99,65 @@ class SafemaxReportRequest(BaseModel):
 class SafemaxReportResponse(BaseModel):
     profile_id: int
     result: SafemaxReport
+
+
+class ProfileComputeBody(BaseModel):
+    profile: Profile
+
+
+class SimulateComputeRequest(BaseModel):
+    profile: Profile
+    scenario: ScenarioOverrides | None = None
+
+
+class SimulateComputeResponse(BaseModel):
+    result: SimulationResult
+
+
+class MonteCarloComputeRequest(BaseModel):
+    profile: Profile
+    scenario: ScenarioOverrides | None = None
+    num_paths: int = Field(500, ge=50, le=5000)
+    seed: int | None = None
+
+
+class MonteCarloComputeResponse(BaseModel):
+    result: MonteCarloResult
+
+
+class RebalanceComputeResponse(BaseModel):
+    result: RebalanceReport
+
+
+class AnnualReviewComputeRequest(BaseModel):
+    profile: Profile
+    prior_year_return: float | None = Field(
+        None,
+        description="Portfolio return last 12 months (decimal). Negative triggers performance hold.",
+    )
+
+
+class AnnualReviewComputeResponse(BaseModel):
+    result: AnnualReviewResult
+
+
+class StrategyComparisonComputeResponse(BaseModel):
+    result: StrategyComparisonResult
+
+
+class SpendingSchemeComparisonComputeResponse(BaseModel):
+    result: SpendingSchemeComparisonResult
+
+
+class AnnuityComparisonComputeResponse(BaseModel):
+    result: AnnuityComparisonResult
+
+
+class SafemaxComputeRequest(BaseModel):
+    profile: Profile
+    run_mc_validation: bool = True
+    num_paths: int = Field(200, ge=50, le=2000)
+
+
+class SafemaxComputeResponse(BaseModel):
+    result: SafemaxReport

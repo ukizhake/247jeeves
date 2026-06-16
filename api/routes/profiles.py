@@ -21,20 +21,14 @@ from api.schemas import (
     SimulateResponse,
     StrategyComparisonResponse,
 )
-from engine import simulate
-from engine.allocation.rebalance import compute_rebalance_report
-from engine.annual_review import compute_annual_review
-from engine.monte_carlo import (
-    MonteCarloConfig,
-    run_annuity_comparison,
-    run_monte_carlo,
-    run_spending_scheme_comparison,
-    run_strategy_comparison,
-)
-from engine.withdrawals.safemax import compute_safemax_report
+from api.services import compute as compute_service
 from engine.models.profile import Profile, ScenarioOverrides
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
+
+
+def _load_profile(record: ProfileRecord) -> Profile:
+    return Profile.model_validate_json(record.data_json)
 
 
 @router.post("", response_model=ProfileResponse)
@@ -51,7 +45,7 @@ def get_profile(profile_id: int, db: Session = Depends(get_db)) -> ProfileRespon
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
+    profile = _load_profile(record)
     return ProfileResponse(id=record.id, profile=profile)
 
 
@@ -99,9 +93,9 @@ def simulate_profile(
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
+    profile = _load_profile(record)
     scenario = body.scenario if body and body.scenario else ScenarioOverrides()
-    result = simulate(profile, scenario)
+    result = compute_service.run_simulation(profile, scenario)
     return SimulateResponse(profile_id=profile_id, result=result)
 
 
@@ -114,11 +108,15 @@ def monte_carlo_profile(
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
+    profile = _load_profile(record)
     body = body or MonteCarloRequest()
     scenario = body.scenario if body.scenario else ScenarioOverrides()
-    config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
-    result = run_monte_carlo(profile, scenario, config)
+    result = compute_service.run_monte_carlo_simulation(
+        profile,
+        scenario,
+        num_paths=body.num_paths,
+        seed=body.seed,
+    )
     return MonteCarloResponse(profile_id=profile_id, result=result)
 
 
@@ -130,8 +128,8 @@ def rebalance_report_profile(
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
-    result = compute_rebalance_report(profile)
+    profile = _load_profile(record)
+    result = compute_service.run_rebalance_report(profile)
     return RebalanceReportResponse(profile_id=profile_id, result=result)
 
 
@@ -144,9 +142,12 @@ def annual_review_profile(
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
+    profile = _load_profile(record)
     body = body or AnnualReviewRequest()
-    result = compute_annual_review(profile, prior_year_return=body.prior_year_return)
+    result = compute_service.run_annual_review(
+        profile,
+        prior_year_return=body.prior_year_return,
+    )
     return AnnualReviewResponse(profile_id=profile_id, result=result)
 
 
@@ -159,11 +160,15 @@ def annuity_compare_profile(
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
+    profile = _load_profile(record)
     body = body or MonteCarloRequest()
     scenario = body.scenario if body.scenario else ScenarioOverrides()
-    config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
-    result = run_annuity_comparison(profile, scenario, config)
+    result = compute_service.run_annuity_comparison(
+        profile,
+        scenario,
+        num_paths=body.num_paths,
+        seed=body.seed,
+    )
     return AnnuityComparisonResponse(profile_id=profile_id, result=result)
 
 
@@ -176,12 +181,12 @@ def safemax_report_profile(
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
+    profile = _load_profile(record)
     body = body or SafemaxReportRequest()
-    result = compute_safemax_report(
+    result = compute_service.run_safemax_report(
         profile,
         run_mc_validation=body.run_mc_validation,
-        mc_paths=body.num_paths,
+        num_paths=body.num_paths,
     )
     return SafemaxReportResponse(profile_id=profile_id, result=result)
 
@@ -195,11 +200,15 @@ def spending_compare_profile(
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
+    profile = _load_profile(record)
     body = body or MonteCarloRequest()
     scenario = body.scenario if body.scenario else ScenarioOverrides()
-    config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
-    result = run_spending_scheme_comparison(profile, scenario, config)
+    result = compute_service.run_spending_scheme_comparison(
+        profile,
+        scenario,
+        num_paths=body.num_paths,
+        seed=body.seed,
+    )
     return SpendingSchemeComparisonResponse(profile_id=profile_id, result=result)
 
 
@@ -212,11 +221,15 @@ def strategy_compare_profile(
     record = db.get(ProfileRecord, profile_id)
     if not record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(record.data_json)
+    profile = _load_profile(record)
     body = body or MonteCarloRequest()
     scenario = body.scenario if body.scenario else ScenarioOverrides()
-    config = MonteCarloConfig(num_paths=body.num_paths, seed=body.seed)
-    result = run_strategy_comparison(profile, scenario, config)
+    result = compute_service.run_strategy_comparison(
+        profile,
+        scenario,
+        num_paths=body.num_paths,
+        seed=body.seed,
+    )
     return StrategyComparisonResponse(profile_id=profile_id, result=result)
 
 
@@ -228,7 +241,7 @@ def simulate_scenario(scenario_id: int, db: Session = Depends(get_db)) -> Simula
     profile_record = db.get(ProfileRecord, scenario_record.profile_id)
     if not profile_record:
         raise HTTPException(404, "Profile not found")
-    profile = Profile.model_validate_json(profile_record.data_json)
+    profile = _load_profile(profile_record)
     scenario = ScenarioOverrides.model_validate_json(scenario_record.data_json)
-    result = simulate(profile, scenario)
+    result = compute_service.run_simulation(profile, scenario)
     return SimulateResponse(profile_id=profile_record.id, result=result)

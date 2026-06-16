@@ -1,16 +1,15 @@
 import type {
-  AnnuityComparisonResponse,
-  AnnualReviewResponse,
+  AnnuityComparisonResult,
+  AnnualReviewResult,
   FidelityImportResult,
-  RebalanceReportResponse,
-  MonteCarloResponse,
+  MonteCarloResult,
   Profile,
-  ProfileResponse,
+  RebalanceReportResult,
+  SafemaxReportResult,
   ScenarioOverrides,
-  SimulateResponse,
-  SafemaxReportResponse,
-  SpendingSchemeComparisonResponse,
-  StrategyComparisonResponse,
+  SimulationResult,
+  SpendingSchemeComparisonResult,
+  StrategyComparisonResult,
 } from '../types'
 
 const API = import.meta.env.VITE_API_BASE ?? '/api'
@@ -39,57 +38,38 @@ async function apiError(res: Response): Promise<Error> {
   return new Error(text || `Request failed (${res.status})`)
 }
 
-export async function createProfile(profile: Profile): Promise<ProfileResponse> {
-  const res = await fetch(`${API}/profiles`, {
+async function postCompute<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API}/compute${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(profile),
+    body: JSON.stringify(body),
   })
   if (!res.ok) throw await apiError(res)
-  return res.json()
+  return res.json() as Promise<T>
 }
 
-export async function updateProfile(
-  profileId: number,
+export async function simulate(
   profile: Profile,
-): Promise<ProfileResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(profile),
-  })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
-}
-
-export async function simulateProfile(
-  profileId: number,
   scenario?: ScenarioOverrides,
-): Promise<SimulateResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}/simulate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ scenario: scenario ?? null }),
+): Promise<SimulationResult> {
+  const data = await postCompute<{ result: SimulationResult }>('/simulate', {
+    profile,
+    scenario: scenario ?? null,
   })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
+  return data.result
 }
 
-export async function monteCarloProfile(
-  profileId: number,
+export async function monteCarlo(
+  profile: Profile,
   options?: { scenario?: ScenarioOverrides; num_paths?: number; seed?: number },
-): Promise<MonteCarloResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}/monte-carlo`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      scenario: options?.scenario ?? null,
-      num_paths: options?.num_paths ?? 500,
-      seed: options?.seed ?? null,
-    }),
+): Promise<MonteCarloResult> {
+  const data = await postCompute<{ result: MonteCarloResult }>('/monte-carlo', {
+    profile,
+    scenario: options?.scenario ?? null,
+    num_paths: options?.num_paths ?? 500,
+    seed: options?.seed ?? null,
   })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
+  return data.result
 }
 
 export async function importFidelityCsv(file: File): Promise<FidelityImportResult> {
@@ -104,94 +84,71 @@ export async function importFidelityCsv(file: File): Promise<FidelityImportResul
   return data.result
 }
 
-export async function rebalanceReportProfile(profileId: number): Promise<RebalanceReportResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}/rebalance-report`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+export async function rebalanceReport(profile: Profile): Promise<RebalanceReportResult> {
+  const data = await postCompute<{ result: RebalanceReportResult }>('/rebalance-report', {
+    profile,
   })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
+  return data.result
 }
 
-export async function annualReviewProfile(
-  profileId: number,
+export async function annualReview(
+  profile: Profile,
   priorYearReturn?: number | null,
-): Promise<AnnualReviewResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}/annual-review`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      prior_year_return: priorYearReturn ?? null,
-    }),
+): Promise<AnnualReviewResult> {
+  const data = await postCompute<{ result: AnnualReviewResult }>('/annual-review', {
+    profile,
+    prior_year_return: priorYearReturn ?? null,
   })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
+  return data.result
 }
 
-export async function safemaxReportProfile(
-  profileId: number,
+export async function safemaxReport(
+  profile: Profile,
   options?: { run_mc_validation?: boolean; num_paths?: number },
-): Promise<SafemaxReportResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}/safemax-report`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      run_mc_validation: options?.run_mc_validation ?? true,
-      num_paths: options?.num_paths ?? 200,
-    }),
+): Promise<SafemaxReportResult> {
+  const data = await postCompute<{ result: SafemaxReportResult }>('/safemax-report', {
+    profile,
+    run_mc_validation: options?.run_mc_validation ?? true,
+    num_paths: options?.num_paths ?? 200,
   })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
+  return data.result
 }
 
-export async function annuityCompareProfile(
-  profileId: number,
+export async function annuityCompare(
+  profile: Profile,
   options?: { scenario?: ScenarioOverrides; num_paths?: number; seed?: number },
-): Promise<AnnuityComparisonResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}/annuity-compare`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      scenario: options?.scenario ?? null,
-      num_paths: options?.num_paths ?? 500,
-      seed: options?.seed ?? null,
-    }),
+): Promise<AnnuityComparisonResult> {
+  const data = await postCompute<{ result: AnnuityComparisonResult }>('/annuity-compare', {
+    profile,
+    scenario: options?.scenario ?? null,
+    num_paths: options?.num_paths ?? 500,
+    seed: options?.seed ?? null,
   })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
+  return data.result
 }
 
-export async function spendingCompareProfile(
-  profileId: number,
+export async function spendingCompare(
+  profile: Profile,
   options?: { scenario?: ScenarioOverrides; num_paths?: number; seed?: number },
-): Promise<SpendingSchemeComparisonResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}/spending-compare`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      scenario: options?.scenario ?? null,
-      num_paths: options?.num_paths ?? 500,
-      seed: options?.seed ?? null,
-    }),
+): Promise<SpendingSchemeComparisonResult> {
+  const data = await postCompute<{ result: SpendingSchemeComparisonResult }>('/spending-compare', {
+    profile,
+    scenario: options?.scenario ?? null,
+    num_paths: options?.num_paths ?? 500,
+    seed: options?.seed ?? null,
   })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
+  return data.result
 }
 
-export async function strategyCompareProfile(
-  profileId: number,
+export async function strategyCompare(
+  profile: Profile,
   options?: { scenario?: ScenarioOverrides; num_paths?: number; seed?: number },
-): Promise<StrategyComparisonResponse> {
-  const res = await fetch(`${API}/profiles/${profileId}/strategy-compare`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      scenario: options?.scenario ?? null,
-      num_paths: options?.num_paths ?? 500,
-      seed: options?.seed ?? null,
-    }),
+): Promise<StrategyComparisonResult> {
+  const data = await postCompute<{ result: StrategyComparisonResult }>('/strategy-compare', {
+    profile,
+    scenario: options?.scenario ?? null,
+    num_paths: options?.num_paths ?? 500,
+    seed: options?.seed ?? null,
   })
-  if (!res.ok) throw await apiError(res)
-  return res.json()
+  return data.result
 }

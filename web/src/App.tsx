@@ -1,15 +1,13 @@
 import { useState } from 'react'
 import {
-  annualReviewProfile,
-  annuityCompareProfile,
-  safemaxReportProfile,
-  createProfile,
-  rebalanceReportProfile,
-  monteCarloProfile,
-  simulateProfile,
-  spendingCompareProfile,
-  strategyCompareProfile,
-  updateProfile,
+  annualReview,
+  annuityCompare,
+  safemaxReport,
+  rebalanceReport,
+  monteCarlo,
+  simulate,
+  spendingCompare,
+  strategyCompare,
 } from './api/client'
 import { AnnuityComparison } from './components/AnnuityComparison'
 import { SafemaxReport } from './components/SafemaxReport'
@@ -49,7 +47,6 @@ function scenarioLabel(id: ReturnScenarioId): string {
 
 function App() {
   const [profile, setProfile] = useState<Profile>(defaultProfile)
-  const [profileId, setProfileId] = useState<number | null>(null)
   const [result, setResult] = useState<SimulationResult | null>(null)
   const [stressResults, setStressResults] = useState<SimulationResult[] | null>(null)
   const [monteCarloResult, setMonteCarloResult] = useState<MonteCarloResult | null>(null)
@@ -89,18 +86,6 @@ function App() {
     }
   }
 
-  async function ensureProfileId(): Promise<number> {
-    if (profileId) {
-      const saved = await updateProfile(profileId, profile)
-      setProfile(saved.profile)
-      return profileId
-    }
-    const created = await createProfile(profile)
-    setProfileId(created.id)
-    setProfile(created.profile)
-    return created.id
-  }
-
   async function runSimulate() {
     setLoading(true)
     setError(null)
@@ -119,15 +104,14 @@ function App() {
       return
     }
     try {
-      const id = await ensureProfileId()
-      const sim = await simulateProfile(
-        id,
+      const sim = await simulate(
+        profile,
         buildScenarioOverrides(
           rothOverride.trim() === '' ? `Base (${scenarioLabel(returnScenario)})` : `Roth override`,
           returnScenario,
         ),
       )
-      setResult(sim.result)
+      setResult(sim)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Simulation failed')
     } finally {
@@ -153,14 +137,13 @@ function App() {
       return
     }
     try {
-      const id = await ensureProfileId()
       const results: SimulationResult[] = []
       for (const scenario of RETURN_SCENARIOS) {
-        const sim = await simulateProfile(
-          id,
+        const sim = await simulate(
+          profile,
           buildScenarioOverrides(`Compare: ${scenario.id}`, scenario.id),
         )
-        results.push(sim.result)
+        results.push(sim)
       }
       setStressResults(results)
       setResult(results[0])
@@ -189,10 +172,9 @@ function App() {
       return
     }
     try {
-      const id = await ensureProfileId()
       const scenario = buildScenarioOverrides('Monte Carlo', 'base')
-      const mc = await monteCarloProfile(id, { scenario, num_paths: 500 })
-      setMonteCarloResult(mc.result)
+      const mc = await monteCarlo(profile, { scenario, num_paths: 500 })
+      setMonteCarloResult(mc)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Monte Carlo failed')
     } finally {
@@ -229,9 +211,8 @@ function App() {
       return
     }
     try {
-      const id = await ensureProfileId()
-      const report = await rebalanceReportProfile(id)
-      setRebalanceResult(report.result)
+      const report = await rebalanceReport(profile)
+      setRebalanceResult(report)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Rebalance report failed')
     } finally {
@@ -254,9 +235,8 @@ function App() {
     }
     try {
       const prior = parsePriorYearReturn()
-      const id = await ensureProfileId()
-      const review = await annualReviewProfile(id, prior)
-      setAnnualReviewResult(review.result)
+      const review = await annualReview(profile, prior)
+      setAnnualReviewResult(review)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Annual review failed')
     } finally {
@@ -283,10 +263,9 @@ function App() {
       return
     }
     try {
-      const id = await ensureProfileId()
       const scenario = buildScenarioOverrides('Annuity compare', 'base')
-      const cmp = await annuityCompareProfile(id, { scenario, num_paths: 500 })
-      setAnnuityCompareResult(cmp.result)
+      const cmp = await annuityCompare(profile, { scenario, num_paths: 500 })
+      setAnnuityCompareResult(cmp)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Annuity comparison failed')
     } finally {
@@ -313,9 +292,8 @@ function App() {
       return
     }
     try {
-      const id = await ensureProfileId()
-      const report = await safemaxReportProfile(id, { num_paths: 200 })
-      setSafemaxResult(report.result)
+      const report = await safemaxReport(profile, { num_paths: 200 })
+      setSafemaxResult(report)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'SAFEMAX report failed')
     } finally {
@@ -342,10 +320,9 @@ function App() {
       return
     }
     try {
-      const id = await ensureProfileId()
       const scenario = buildScenarioOverrides('Spending compare', 'base')
-      const cmp = await spendingCompareProfile(id, { scenario, num_paths: 500 })
-      setSpendingCompareResult(cmp.result)
+      const cmp = await spendingCompare(profile, { scenario, num_paths: 500 })
+      setSpendingCompareResult(cmp)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Spending scheme comparison failed')
     } finally {
@@ -371,10 +348,9 @@ function App() {
       return
     }
     try {
-      const id = await ensureProfileId()
       const scenario = buildScenarioOverrides('Strategy compare', 'base')
-      const cmp = await strategyCompareProfile(id, { scenario, num_paths: 500 })
-      setStrategyCompareResult(cmp.result)
+      const cmp = await strategyCompare(profile, { scenario, num_paths: 500 })
+      setStrategyCompareResult(cmp)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Strategy comparison failed')
     } finally {
@@ -580,16 +556,15 @@ function App() {
               type="button"
               disabled={loading}
               onClick={() => {
-                setProfileId(null)
                 setResult(null)
                 setStressResults(null)
                 setMonteCarloResult(null)
                 setStrategyCompareResult(null)
                 setAnnualReviewResult(null)
-    setRebalanceResult(null)
-    setSpendingCompareResult(null)
-    setAnnuityCompareResult(null)
-    setSafemaxResult(null)
+                setRebalanceResult(null)
+                setSpendingCompareResult(null)
+                setAnnuityCompareResult(null)
+                setSafemaxResult(null)
               }}
               className="rounded-lg border border-slate-600 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
             >
@@ -600,7 +575,6 @@ function App() {
               disabled={loading}
               onClick={() => {
                 setProfile(defaultSingleProfile)
-                setProfileId(null)
                 setResult(null)
                 setStressResults(null)
                 setMonteCarloResult(null)
@@ -620,7 +594,6 @@ function App() {
               disabled={loading}
               onClick={() => {
                 setProfile(defaultProfile)
-                setProfileId(null)
                 setResult(null)
                 setStressResults(null)
                 setMonteCarloResult(null)
