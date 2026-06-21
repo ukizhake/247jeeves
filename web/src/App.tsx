@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   annualReview,
   annuityCompare,
@@ -65,6 +65,28 @@ function App() {
   const [returnScenario, setReturnScenario] = useState<ReturnScenarioId>('base')
   const [netPortfolioIncome, setNetPortfolioIncome] = useState(true)
   const [spendingScenarioOverride, setSpendingScenarioOverride] = useState<WithdrawalScheme | ''>('')
+  const agesInitialized = useRef(false)
+
+  function clearAllResults() {
+    setResult(null)
+    setStressResults(null)
+    setMonteCarloResult(null)
+    setStrategyCompareResult(null)
+    setAnnualReviewResult(null)
+    setRebalanceResult(null)
+    setSpendingCompareResult(null)
+    setAnnuityCompareResult(null)
+    setSafemaxResult(null)
+  }
+
+  // Stale projection: table keeps last run's ages until you re-run. Clear when ages change.
+  useEffect(() => {
+    if (!agesInitialized.current) {
+      agesInitialized.current = true
+      return
+    }
+    clearAllResults()
+  }, [profile.age, profile.spouse_age])
 
   function buildScenarioOverrides(name: string, scenarioId: ReturnScenarioId): ScenarioOverrides {
     const rothTrimmed = rothOverride.trim()
@@ -702,6 +724,12 @@ function App() {
                 {result.meta?.withdrawal_scheme && (
                   <span className="rounded-full bg-violet-950 px-3 py-1 text-sm text-violet-200">
                     Spend: {spendingSchemeLabel(String(result.meta.withdrawal_scheme), debug)}
+                  </span>
+                )}
+                {result.years[0] && (
+                  <span className="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">
+                    Ages in run: You {result.years[0].age}
+                    {result.years[0].spouse_age != null && ` · Sp ${result.years[0].spouse_age}`}
                   </span>
                 )}
               </div>

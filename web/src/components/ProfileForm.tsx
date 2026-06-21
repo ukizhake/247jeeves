@@ -179,6 +179,14 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
         </label>
       )}
 
+      {isCouple && (
+        <p className="text-xs text-slate-500 sm:col-span-2">
+          Year 1 shows <strong className="font-medium text-slate-400">You</strong> = your age and{' '}
+          <strong className="font-medium text-slate-400">Sp</strong> = spouse age. Changing either
+          clears the projection — run simulation again.
+        </p>
+      )}
+
       <label className="block">
         <span className="text-sm text-slate-400">
           {debug ? 'Plan through age' : 'Project through age'}
