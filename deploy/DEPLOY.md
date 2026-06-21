@@ -7,7 +7,7 @@ Split hosting:
 | **UI** | Vercel → `https://247jeeves.com` |
 | **API** | Mac Mini → Cloudflare Tunnel → `https://api.247jeeves.com` |
 
-Financial profiles live in `247jeeves.db` on the Mac Mini only. Vercel serves static files; it never sees profile data.
+Financial data is **not stored on the server** for normal runs (stateless `/api/compute/*`). Vercel serves static files only.
 
 ---
 
@@ -29,23 +29,57 @@ Create `~/Projects/247jeeves/.env`:
 CORS_ORIGINS=https://247jeeves.com,https://www.247jeeves.com,https://247jeeves.vercel.app
 ```
 
-Test:
+Test manually (optional, one-off):
 
 ```bash
+cd ~/Projects/247jeeves
 export PYTHONPATH="$HOME/Projects/247jeeves"
 .venv/bin/uvicorn api.main:app --host 127.0.0.1 --port 8888
 # other tab: curl -s http://127.0.0.1:8888/api/health
 ```
 
-### Keep API running (launchd)
+### Keep API running (launchd — **one job only**)
+
+Use the **user LaunchAgent** only. Do **not** also install a system LaunchDaemon — that duplicates the service and causes confusion.
+
+**One-time install:**
 
 ```bash
-cp ~/Projects/247jeeves/deploy/macmini-api.plist ~/Library/LaunchAgents/com.247jeeves.api.plist
-launchctl load ~/Library/LaunchAgents/com.247jeeves.api.plist
-launchctl start com.247jeeves.api
+cd ~/Projects/247jeeves
+mkdir -p logs
+cp deploy/macmini-api.plist ~/Library/LaunchAgents/com.247jeeves.api.plist
+
+# stop any manual uvicorn first
+kill $(pgrep -f "uvicorn api.main:app") 2>/dev/null
+
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.247jeeves.api.plist
+launchctl enable gui/$(id -u)/com.247jeeves.api
+launchctl kickstart -k gui/$(id -u)/com.247jeeves.api
+```
+
+**Verify:**
+
+```bash
+launchctl print gui/$(id -u)/com.247jeeves.api | grep -E 'state =|pid ='
+curl -s http://127.0.0.1:8888/api/health
+```
+
+**Restart after code updates** (see Part 5):
+
+```bash
+launchctl kickstart -k gui/$(id -u)/com.247jeeves.api
 ```
 
 Port **8888** (247jeeves). MendonBend stays on **8000**.
+
+**If you accidentally installed a system LaunchDaemon**, remove it and use the Agent above only:
+
+```bash
+sudo launchctl bootout system/com.247jeeves.api 2>/dev/null
+sudo rm -f /Library/LaunchDaemons/com.247jeeves.api.plist
+kill $(pgrep -f "uvicorn api.main:app") 2>/dev/null
+# then run the one-time LaunchAgent install again
+```
 
 ---
 
@@ -150,6 +184,6 @@ launchctl kickstart -k gui/$(id -u)/com.247jeeves.api
 
 ## Privacy
 
-- Profiles stored on Mac Mini in `247jeeves.db`
+- Normal runs use stateless `/api/compute/*` — profile sent for that request only, not saved on the Mini
+- Legacy `/api/profiles/*` routes still exist in SQLite for future “saved plans”; the public UI does not use them
 - No AI / third-party analytics in the app
-- API has no auth today — acceptable for family use; add auth before broad public launch

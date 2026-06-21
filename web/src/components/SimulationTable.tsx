@@ -1,3 +1,4 @@
+import { publicText } from '../debug'
 import type { YearState } from '../types'
 
 function money(n: number) {
@@ -196,7 +197,9 @@ export function SimulationTable({ years, debug = false }: { years: YearState[]; 
               )}
               {showSpendNote && (
                 <td className="max-w-[12rem] truncate px-2 py-1.5 text-xs text-slate-500" title={y.spending_adjustment_note}>
-                  {y.spending_adjustment_note || '—'}
+                  {y.spending_adjustment_note
+                    ? publicText(y.spending_adjustment_note, debug)
+                    : '—'}
                 </td>
               )}
               {showNonBaseReturn && (

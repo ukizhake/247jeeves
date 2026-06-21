@@ -1,3 +1,4 @@
+import { publicText } from '../debug'
 import type { RebalanceReportResult } from '../types'
 
 function money(n: number) {
@@ -119,7 +120,7 @@ export function RebalanceReport({ result, debug = false }: Props) {
 
       <ul className="mt-3 list-inside list-disc space-y-1 text-xs text-slate-500">
         {result.suggestions.map((s) => (
-          <li key={s}>{s}</li>
+          <li key={s}>{publicText(s, debug)}</li>
         ))}
       </ul>
     </div>

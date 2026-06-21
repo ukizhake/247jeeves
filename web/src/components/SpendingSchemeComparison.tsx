@@ -1,3 +1,5 @@
+import { spendingSchemeLabel } from '../constants/spendingSchemes'
+
 import type { SpendingSchemeComparisonResult } from '../types'
 
 function usd(n: number) {
@@ -20,7 +22,13 @@ function bestScheme(
   return best.scheme
 }
 
-export function SpendingSchemeComparison({ result }: { result: SpendingSchemeComparisonResult }) {
+export function SpendingSchemeComparison({
+  result,
+  debug = false,
+}: {
+  result: SpendingSchemeComparisonResult
+  debug?: boolean
+}) {
   const bestSuccess = bestScheme(result.schemes, 'success_rate')
   const bestWealth = bestScheme(result.schemes, 'median_final_wealth')
   const bestSpend = bestScheme(result.schemes, 'median_lifetime_spending')
@@ -42,7 +50,9 @@ export function SpendingSchemeComparison({ result }: { result: SpendingSchemeCom
           {result.schemes.map((s) => (
             <tr key={s.scheme} className="border-t border-slate-800 hover:bg-slate-900/40">
               <td className="px-3 py-2">
-                <span className="font-medium text-slate-200">{s.label}</span>
+                <span className="font-medium text-slate-200">
+                  {spendingSchemeLabel(s.scheme, debug)}
+                </span>
                 {s.scheme === bestSuccess && (
                   <span className="ml-2 rounded bg-emerald-900/60 px-1.5 py-0.5 text-xs text-emerald-400">
                     best success

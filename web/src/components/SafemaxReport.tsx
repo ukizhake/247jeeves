@@ -1,3 +1,4 @@
+import { publicText } from '../debug'
 import type { SafemaxReportResult } from '../types'
 
 function usd(n: number) {
@@ -127,7 +128,7 @@ export function SafemaxReport({ result, debug = false }: { result: SafemaxReport
 
       <ul className="list-disc space-y-2 pl-5 text-sm text-slate-400">
         {result.suggestions.map((s, i) => (
-          <li key={i}>{s}</li>
+          <li key={i}>{publicText(s, debug)}</li>
         ))}
       </ul>
     </div>

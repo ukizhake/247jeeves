@@ -24,7 +24,7 @@ import { SpendingSchemeComparison } from './components/SpendingSchemeComparison'
 import { StrategyComparison } from './components/StrategyComparison'
 import { SummaryCards } from './components/SummaryCards'
 import { RETURN_SCENARIOS, type ReturnScenarioId } from './constants/returnScenarios'
-import { SPENDING_SCHEME_OPTIONS, spendingSchemeLabel } from './constants/spendingSchemes'
+import { spendingSchemeLabel, spendingSchemeOptions } from './constants/spendingSchemes'
 import { defaultProfile, defaultSingleProfile } from './defaultProfile'
 import { isDebugMode } from './debug'
 import type {
@@ -432,7 +432,7 @@ function App() {
                   setSpendingScenarioOverride(e.target.value as WithdrawalScheme | '')
                 }
               >
-                {SPENDING_SCHEME_OPTIONS.map((s) => (
+                {spendingSchemeOptions(debug).map((s) => (
                   <option key={s.id || 'default'} value={s.id}>
                     {s.label}
                   </option>
@@ -526,7 +526,7 @@ function App() {
               disabled={loading}
               className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2.5 text-sm text-amber-200 hover:bg-amber-900/40 disabled:opacity-50"
             >
-              {loading ? 'Running…' : 'Annuity vs book FA'}
+              {loading ? 'Running…' : debug ? 'Annuity vs book FA' : 'Annuity vs fixed spending'}
             </button>
             <button
               type="button"
@@ -621,7 +621,9 @@ function App() {
 
         {annuityCompareResult && (
           <section className="mx-auto w-full max-w-[1600px]">
-            <h2 className="mb-3 text-lg font-semibold">Insurance annuity vs book FA</h2>
+            <h2 className="mb-3 text-lg font-semibold">
+              {debug ? 'Insurance annuity vs book FA' : 'Insurance annuity vs fixed spending'}
+            </h2>
             <AnnuityComparison result={annuityCompareResult} debug={debug} />
           </section>
         )}
@@ -650,7 +652,7 @@ function App() {
         {spendingCompareResult && (
           <section className="mx-auto w-full max-w-[1600px]">
             <h2 className="mb-3 text-lg font-semibold">Spending scheme comparison</h2>
-            <SpendingSchemeComparison result={spendingCompareResult} />
+            <SpendingSchemeComparison result={spendingCompareResult} debug={debug} />
           </section>
         )}
 
@@ -699,7 +701,7 @@ function App() {
                 )}
                 {result.meta?.withdrawal_scheme && (
                   <span className="rounded-full bg-violet-950 px-3 py-1 text-sm text-violet-200">
-                    Spend: {spendingSchemeLabel(String(result.meta.withdrawal_scheme))}
+                    Spend: {spendingSchemeLabel(String(result.meta.withdrawal_scheme), debug)}
                   </span>
                 )}
               </div>

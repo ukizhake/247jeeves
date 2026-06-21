@@ -1,3 +1,4 @@
+import { publicText } from '../debug'
 import type { AnnuityComparisonResult } from '../types'
 
 function usd(n: number) {
@@ -20,9 +21,11 @@ export function AnnuityComparison({
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-amber-800/50 bg-amber-950/20 p-4 text-sm text-slate-300">
-        <p className="font-medium text-amber-300">Book FA vs insurance SPIA</p>
-        <p className="mt-2">{edu.book_fa_explanation}</p>
-        <p className="mt-2">{edu.spira_explanation}</p>
+        <p className="font-medium text-amber-300">
+          {debug ? 'Book FA vs insurance SPIA' : 'Fixed nominal spending vs insurance SPIA'}
+        </p>
+        <p className="mt-2">{publicText(edu.book_fa_explanation, debug)}</p>
+        <p className="mt-2">{publicText(edu.spira_explanation, debug)}</p>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
@@ -41,9 +44,9 @@ export function AnnuityComparison({
             {edu.year_one_snapshots.map((s) => (
               <tr key={s.variant} className="border-t border-slate-800">
                 <td className="px-3 py-2">
-                  <span className="font-medium text-slate-200">{s.label}</span>
+                  <span className="font-medium text-slate-200">{publicText(s.label, debug)}</span>
                   {debug && s.notes && (
-                    <p className="mt-0.5 text-xs text-slate-500">{s.notes}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{publicText(s.notes, debug)}</p>
                   )}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">{usd(s.total_wealth)}</td>
@@ -77,7 +80,9 @@ export function AnnuityComparison({
             <tbody>
               {result.variants.map((v) => (
                 <tr key={v.variant} className="border-t border-slate-800">
-                  <td className="px-3 py-2 font-medium text-slate-200">{v.label}</td>
+                  <td className="px-3 py-2 font-medium text-slate-200">
+                    {publicText(v.label, debug)}
+                  </td>
                   <td className="px-3 py-2 text-right tabular-nums">
                     {(v.success_rate * 100).toFixed(1)}%
                   </td>
@@ -98,7 +103,7 @@ export function AnnuityComparison({
       {edu.suggestions.length > 0 && (
         <ul className="list-inside list-disc space-y-1 text-xs text-slate-500">
           {edu.suggestions.map((s) => (
-            <li key={s}>{s}</li>
+            <li key={s}>{publicText(s, debug)}</li>
           ))}
         </ul>
       )}

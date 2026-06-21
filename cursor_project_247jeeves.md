@@ -63,15 +63,21 @@ CORS_ORIGINS=https://247jeeves.com,https://www.247jeeves.com,https://247jeeves.v
 
 ### Run API via launchd (survives SSH close + reboot)
 
+**One job only:** user LaunchAgent at `gui/$(id -u)/com.247jeeves.api`. Do not also install a system LaunchDaemon.
+
 ```bash
-cp ~/Projects/247jeeves/deploy/macmini-api.plist ~/Library/LaunchAgents/com.247jeeves.api.plist
-launchctl load ~/Library/LaunchAgents/com.247jeeves.api.plist
+cd ~/Projects/247jeeves
+mkdir -p logs
+cp deploy/macmini-api.plist ~/Library/LaunchAgents/com.247jeeves.api.plist
+kill $(pgrep -f "uvicorn api.main:app") 2>/dev/null
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.247jeeves.api.plist
+launchctl enable gui/$(id -u)/com.247jeeves.api
 launchctl kickstart -k gui/$(id -u)/com.247jeeves.api
 ```
 
 ```bash
 curl -s http://127.0.0.1:8888/api/health
-launchctl list | grep 247jeeves
+launchctl print gui/$(id -u)/com.247jeeves.api | grep -E 'state =|pid ='
 tail -20 ~/Projects/247jeeves/logs/api.log
 ```
 

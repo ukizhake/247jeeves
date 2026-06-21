@@ -13,13 +13,17 @@ export function Recommendations({ items, debug = false }: { items: Recommendatio
 
   return (
     <ul className="space-y-4">
-      {items.map((rec) => (
+      {items.map((rec) => {
+        const rationale = publicText(rec.rationale, debug)
+        return (
         <li
           key={rec.rule_id}
           className="rounded-xl border border-emerald-900/50 bg-emerald-950/30 p-4"
         >
           <h3 className="font-semibold text-emerald-300">{rec.title}</h3>
-          <p className="mt-1 text-sm text-slate-300">{publicText(rec.rationale, debug)}</p>
+          {rationale && (
+            <p className="mt-1 text-sm text-slate-300">{rationale}</p>
+          )}
           <ul className="mt-3 space-y-2">
             {rec.actions.map((a, i) => (
               <li key={i} className="text-sm">
@@ -53,11 +57,12 @@ export function Recommendations({ items, debug = false }: { items: Recommendatio
           </ul>
           {rec.tradeoffs.length > 0 && (
             <p className="mt-2 text-xs text-slate-500">
-              Tradeoffs: {rec.tradeoffs.join(' · ')}
+              Tradeoffs: {rec.tradeoffs.map((t) => publicText(t, debug)).join(' · ')}
             </p>
           )}
         </li>
-      ))}
+        )
+      })}
     </ul>
   )
 }

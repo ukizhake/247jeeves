@@ -420,7 +420,11 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
         >
           <option value="performance_cola">Performance COLA (hold after down year)</option>
           <option value="cola">COLA every year</option>
-          <option value="fixed_annuity">Book FA (nominal lifestyle — not insurance)</option>
+          <option value="fixed_annuity">
+            {debug
+              ? 'Book FA (nominal lifestyle — not insurance)'
+              : 'Fixed amount (nominal — not insurance)'}
+          </option>
           <option value="fixed_percentage">Fixed % of portfolio (FP)</option>
           <option value="floor_ceiling">Floor & ceiling (F&C)</option>
         </select>
@@ -664,7 +668,9 @@ export function ProfileForm({ profile, onChange, disabled, debug = false }: Prop
           onChange={(e) => set({ spira_premium_paid: num(e.target.value) })}
         />
         <p className="mt-1 text-xs text-slate-500">
-          For &quot;Compare annuity vs book FA&quot; — reduces investable balances in that analysis.
+          {debug
+            ? 'For "Compare annuity vs book FA" — reduces investable balances in that analysis.'
+            : 'For "Compare annuity vs fixed spending" — reduces investable balances in that analysis.'}
         </p>
       </label>
 

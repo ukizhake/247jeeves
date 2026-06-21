@@ -26,7 +26,9 @@ Or run API and web separately:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-PYTHONPATH=. uvicorn api.main:app --reload --port 8888
+launchctl kickstart -k gui/$(id -u)/com.247jeeves.api
+
+#PYTHONPATH=. uvicorn api.main:app --reload --port 8888
 ```
 
 API docs: http://localhost:8888/docs
@@ -42,6 +44,21 @@ npm run dev
 ```
 
 App: http://localhost:5173
+
+### Debug mode
+
+Add `?debug=1` to the URL to show internal/educational detail that is hidden in the default UI:
+
+- Book and deck terminology (e.g. “Book FA”, chapter references in recommendations)
+- Extra simulation columns (phase, spend-rule notes)
+- Phase labels on accordions and richer report copy
+
+Examples:
+
+- Local: http://localhost:5173/?debug=1
+- Production: https://247jeeves.com/?debug=1
+
+For a production build, you can also set `VITE_DEBUG=true` in Vercel (or `web/.env`) so debug UI is always on — leave it unset for the public site.
 
 Brand logo: `web/public/logo.png` (wordmark; also used as favicon).
 
